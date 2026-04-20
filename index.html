@@ -1172,11 +1172,44 @@ let ANALISTAS = [];
 let ARTIGOS = [];
 let PARCEIROS = [];
 
+const MONTHS_PT = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+const CATEGORY_MAP = {
+  'on-chain':'ON-CHAIN','onchain':'ON-CHAIN','macro':'MACRO',
+  'mercado':'MERCADO','market':'MERCADO',
+  'geopolitica':'GEOPOLÍTICA','geopolítica':'GEOPOLÍTICA','geopolitics':'GEOPOLÍTICA'
+};
+
+async function fetchArtigosSubstack() {
+  const rss = encodeURIComponent('https://wesearch.substack.com/feed');
+  const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=10`;
+  try {
+    const data = await fetch(url).then(r => r.json());
+    if (data.status !== 'ok' || !data.items?.length) throw new Error('sem itens');
+    return data.items.map((item, i) => {
+      const d = new Date(item.pubDate);
+      const date = `${String(d.getDate()).padStart(2,'0')} ${MONTHS_PT[d.getMonth()]} ${d.getFullYear()}`;
+      const cats = (item.categories || []).map(c => c.toLowerCase().trim());
+      const category = cats.map(c => CATEGORY_MAP[c]).find(Boolean) || 'RESEARCH';
+      const excerpt = item.description
+        .replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,120)
+        .replace(/\s\S*$/, '') + '.';
+      const author = (item.author || '').replace(/\s*-.*$/, '').trim().toUpperCase();
+      return {
+        n: String(i+1).padStart(2,'0'), date, title: item.title,
+        excerpt, author, category, url: item.link
+      };
+    });
+  } catch {
+    // fallback: usa artigos.json estático
+    return fetch('data/artigos.json').then(r => r.json());
+  }
+}
+
 async function loadAll() {
   const [e, a, r, p] = await Promise.all([
     fetch('data/eventos.json').then(r=>r.json()),
     fetch('data/analistas.json').then(r=>r.json()),
-    fetch('data/artigos.json').then(r=>r.json()),
+    fetchArtigosSubstack(),
     fetch('data/parceiros.json').then(r=>r.json())
   ]);
   EVENTOS = e; ANALISTAS = a; ARTIGOS = r; PARCEIROS = p;
