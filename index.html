@@ -510,6 +510,47 @@ section.tight { padding: 0; }
   margin-top: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase;
 }
 
+.country-label {
+  position: absolute; top: 0; left: 0; z-index: 7;
+  pointer-events: none;
+  background: rgba(10,10,10,0.95); border: 1px solid var(--border-strong);
+  padding: .5rem .7rem; display: flex; flex-direction: column; gap: .15rem;
+  opacity: 0; transform: translateY(-2px);
+  transition: opacity .12s var(--ease), transform .12s var(--ease);
+  white-space: nowrap;
+}
+.country-label.on { opacity: 1; transform: none; }
+.country-label .cl-name { font-family: var(--serif); font-size: 0.95rem; color: var(--fg); line-height: 1.1; }
+.country-label .cl-meta { font-family: var(--mono); font-size: 0.58rem; color: var(--muted-dim); letter-spacing: 0.14em; text-transform: uppercase; }
+.country-label .cl-meta.has { color: var(--orange); }
+
+.country-panel {
+  position: absolute; top: 1rem; right: 1rem;
+  width: min(360px, calc(100% - 2rem)); max-height: calc(100% - 2rem);
+  background: rgba(10,10,10,0.94); border: 1px solid var(--border-strong);
+  backdrop-filter: blur(8px); z-index: 6;
+  opacity: 0; pointer-events: none; transform: translateY(-4px);
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
+  display: flex; flex-direction: column;
+}
+.country-panel.on { opacity: 1; pointer-events: auto; transform: none; }
+.country-panel header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1rem 1.1rem .9rem; border-bottom: 1px solid var(--border); }
+.country-panel .cp-kicker { display: block; font-size: 0.62rem; margin-bottom: .5rem; }
+.country-panel h3 { font-family: var(--serif); font-weight: 500; font-size: 1.35rem; letter-spacing: -0.01em; line-height: 1.1; }
+.country-panel .cp-count { display: block; margin-top: .4rem; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
+.country-panel #cp-close { font-family: var(--mono); font-size: 0.95rem; color: var(--muted); width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border-strong); flex-shrink: 0; transition: color .2s var(--ease), border-color .2s var(--ease); }
+.country-panel #cp-close:hover { color: var(--orange); border-color: var(--orange); }
+.cp-list { overflow-y: auto; padding: .4rem 0; flex: 1; min-height: 0; }
+.cp-item { display: block; padding: .85rem 1.1rem; border-bottom: 1px solid var(--border); transition: background .2s var(--ease); }
+.cp-item:hover { background: var(--surface); }
+.cp-item .cp-cat { display: block; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin-bottom: .35rem; }
+.cp-item .cp-title { display: block; font-family: var(--serif); font-size: 1rem; line-height: 1.25; color: var(--fg); }
+.cp-item .cp-meta { display: block; font-family: var(--mono); font-size: 0.62rem; color: var(--muted-dim); margin-top: .4rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.cp-empty { padding: 1.5rem 1.1rem; font-size: 0.85rem; color: var(--muted); }
+@media (max-width: 720px) {
+  .country-panel { top: auto; bottom: 1rem; right: 1rem; left: 1rem; width: auto; max-height: 55%; }
+}
+
 .globe-legend {
   position: absolute;
   bottom: 0; left: 0;
@@ -836,6 +877,11 @@ section.tight { padding: 0; }
 .tk-fg-eg { color: var(--orange); }
 .tk-skel { display: inline-block; width: 72px; height: 10px; background: var(--surface); opacity: 0.6; vertical-align: middle; animation: shimmer 1.4s ease-in-out infinite; }
 @keyframes shimmer { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+@keyframes tk-flash { 0% { box-shadow: 0 0 0 0 rgba(255,138,0,0); background: transparent; } 25% { box-shadow: 0 0 10px 4px rgba(255,138,0,0.7); background: rgba(255,138,0,0.15); } 100% { box-shadow: 0 0 0 0 rgba(255,138,0,0); background: transparent; } }
+@keyframes tk-sweep { 0% { left: -30%; } 100% { left: 110%; } }
+.tk-item.flash { animation: tk-flash 1s ease-out !important; }
+.ticker { position: relative; }
+.ticker-sweep { position: absolute; top: 0; left: -30%; width: 30%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent); pointer-events: none; animation: tk-sweep 0.6s ease-in-out; z-index: 2; }
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; overflow-x: auto; scroll-snap-type: x mandatory; }
 }
@@ -1039,6 +1085,21 @@ footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }
           <div>PROJ · ORTHOGRAPHIC</div>
         </div>
         <svg id="globe-svg" viewBox="0 0 600 600" aria-hidden="true"></svg>
+        <div class="country-label" id="country-label" aria-hidden="true">
+          <span class="cl-name"></span>
+          <span class="cl-meta"></span>
+        </div>
+        <aside class="country-panel" id="country-panel" aria-live="polite">
+          <header>
+            <div>
+              <span class="cp-kicker mono orange">◆ Cobertura</span>
+              <h3 id="cp-title">—</h3>
+              <span id="cp-count" class="cp-count mono">—</span>
+            </div>
+            <button id="cp-close" aria-label="Fechar">✕</button>
+          </header>
+          <div class="cp-list" id="cp-list"></div>
+        </aside>
         <div class="globe-tooltip" id="tip">
           <span class="cat" id="tip-cat">CATEGORY</span>
           <div class="ttl" id="tip-title">Title</div>
@@ -1428,9 +1489,13 @@ async function loadWorld() {
 async function setupGlobe() {
   const svg = document.getElementById('globe-svg');
   const SVGNS = 'http://www.w3.org/2000/svg';
+  let countriesFC = { features: [] };
   try {
     const world_ = await loadWorld();
     landCache = topojson.feature(world_, world_.objects.land);
+    if (world_.objects.countries) {
+      try { countriesFC = topojson.feature(world_, world_.objects.countries); } catch(e) {}
+    }
   } catch (err) {
     console.warn('world-atlas fetch failed; using empty land', err);
     landCache = { type: 'FeatureCollection', features: [] };
@@ -1465,22 +1530,51 @@ async function setupGlobe() {
     return maskData[(y * MASK_W + x) * 4] > 128;
   }
 
+  // -------- Zoom --------
+  let zoomScale = 1;
+  const ZOOM_MIN = 1, ZOOM_MAX = 4;
+  function applyScale() { projection.scale(GLOBE_R * zoomScale); dirty = true; }
+  svg.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    zoomScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomScale * factor));
+    applyScale();
+  }, { passive: false });
+  let pinchStart = null;
+  svg.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchStart = { d: Math.hypot(dx, dy), z: zoomScale };
+    }
+  }, { passive: true });
+  svg.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchStart) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      zoomScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, pinchStart.z * (Math.hypot(dx, dy) / pinchStart.d)));
+      applyScale();
+    }
+  }, { passive: true });
+
   // -------- Drag rotate --------
-  let dragStart = null, dragRot = null;
-  const onDown = (x, y) => { dragStart = [x, y]; dragRot = [...rotation]; autoRotate = false; dirty = true; };
+  let dragStart = null, dragRot = null, dragMoved = 0;
+  const onDown = (x, y) => { dragStart = [x, y]; dragRot = [...rotation]; dragMoved = 0; autoRotate = false; dirty = true; };
   const onMove = (x, y) => {
     if (!dragStart) return;
-    rotation = [dragRot[0] + (x - dragStart[0]) * 0.4,
-                Math.max(-85, Math.min(85, dragRot[1] - (y - dragStart[1]) * 0.4)), 0];
+    dragMoved = Math.max(dragMoved, Math.abs(x - dragStart[0]) + Math.abs(y - dragStart[1]));
+    const k = 0.4 / Math.max(1, zoomScale);
+    rotation = [dragRot[0] + (x - dragStart[0]) * k,
+                Math.max(-85, Math.min(85, dragRot[1] - (y - dragStart[1]) * k)), 0];
     projection.rotate(rotation); dirty = true;
   };
   const onUp = () => { dragStart = null; setTimeout(() => { if (!dragStart) autoRotate = cfg.autoRotate; }, 250); };
   svg.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
   window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
   window.addEventListener('mouseup', onUp);
-  svg.addEventListener('touchstart', e => { const t=e.touches[0]; onDown(t.clientX, t.clientY); }, { passive: true });
-  svg.addEventListener('touchmove',  e => { const t=e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
-  svg.addEventListener('touchend', onUp);
+  svg.addEventListener('touchstart', e => { if (e.touches.length === 1) { const t=e.touches[0]; onDown(t.clientX, t.clientY); } }, { passive: true });
+  svg.addEventListener('touchmove',  e => { if (e.touches.length === 1) { const t=e.touches[0]; onMove(t.clientX, t.clientY); } }, { passive: true });
+  svg.addEventListener('touchend', (e) => { pinchStart = null; onUp(); });
 
   // -------- Build halftone dot grid once (land only) --------
   let dotPoints = [];
@@ -1496,8 +1590,8 @@ async function setupGlobe() {
   buildDots();
 
   // -------- Sort events --------
-  const sortedEvents = EVENTOS.filter(e => e.country !== 'Global').sort((a,b)=>b.date.localeCompare(a.date));
-  const latestId = sortedEvents[0] && sortedEvents[0].id;
+  let sortedEvents = [];
+  let latestId = null;
 
   // -------- Static scaffold (defs, sphere, glow) created ONCE --------
   svg.innerHTML = `
@@ -1516,6 +1610,7 @@ async function setupGlobe() {
     <path id="g-sphere" fill="url(#spheregrad)" stroke="#1f1f1f" stroke-width="1"/>
     <path id="g-grat" fill="none" stroke="#1f1f1f" stroke-width="0.5" opacity="0.5"/>
     <g id="g-dots"></g>
+    <g id="g-hover"></g>
     <g id="g-evts"></g>
   `;
   const sphereEl = svg.querySelector('#g-sphere');
@@ -1543,11 +1638,19 @@ async function setupGlobe() {
   }
   rebuildDotNodes();
 
-  // Pre-create event nodes (stable — don't rebuild each frame)
+  // Pre-create event nodes — rebuilt via buildMarkersFromEvents()
+  let dirty = true;
   const evtNodes = new Map();
-  {
+
+  function buildMarkersFromEvents(events) {
+    const fresh = events.filter(e => e.country !== 'Global')
+      .sort((a,b) => b.date.localeCompare(a.date));
+    sortedEvents = fresh;
+    latestId = fresh[0]?.id;
+    evtNodes.clear();
+    evtsG.innerHTML = '';
     const frag = document.createDocumentFragment();
-    sortedEvents.forEach(ev => {
+    fresh.forEach(ev => {
       const c = document.createElementNS(SVGNS, 'circle');
       c.setAttribute('class', 'evt' + (ev.id === latestId ? ' pulse' : ''));
       c.setAttribute('data-id', ev.id);
@@ -1559,7 +1662,178 @@ async function setupGlobe() {
       evtNodes.set(ev.id, c);
     });
     evtsG.appendChild(frag);
+    dirty = true;
   }
+
+  buildMarkersFromEvents(EVENTOS);
+
+  // -------- topojson feature name → GEO_DICT tag --------
+  const FEATURE_TO_TAG = {
+    'Brazil':'brazil','United States of America':'united states','United States':'united states',
+    'Russia':'russia','Russian Federation':'russia',
+    'China':'china',"China, People's Republic":'china',
+    'France':'france','Germany':'germany',
+    'United Kingdom':'united kingdom','England':'united kingdom','Britain':'united kingdom',
+    'India':'india','Japan':'japan',
+    'South Korea':'south korea','Republic of Korea':'south korea','Korea, Republic of':'south korea',
+    'North Korea':'north korea',"Korea, Democratic People's Republic":'north korea',
+    'Iran':'iran','Islamic Republic of Iran':'iran',
+    'Israel':'israel','Turkey':'turkey','Türkiye':'turkey',
+    'Saudi Arabia':'saudi arabia','Egypt':'egypt','Ukraine':'ukraine',
+    'Argentina':'argentina','Mexico':'mexico','Canada':'canada',
+    'Australia':'australia','South Africa':'south africa',
+    'Nigeria':'nigeria','Pakistan':'pakistan','Indonesia':'indonesia',
+    'Vietnam':'vietnam','Viet Nam':'vietnam',
+    'Thailand':'thailand','Malaysia':'malaysia','Philippines':'philippines',
+    'Singapore':'singapore','Taiwan':'taiwan',
+    'Colombia':'colombia','Venezuela':'venezuela','Chile':'chile','Peru':'peru',
+    'Lebanon':'lebanon','Syria':'syria','Iraq':'iraq','Yemen':'yemen',
+    'United Arab Emirates':'uae','Qatar':'qatar','Kuwait':'kuwait',
+    'Ethiopia':'ethiopia','Kenya':'kenya','Morocco':'morocco','Ghana':'ghana',
+    'Sudan':'sudan','South Sudan':'sudan','Democratic Republic of the Congo':'congo',
+    'New Zealand':'new zealand','Greece':'greece','Poland':'poland',
+    'Sweden':'sweden','Netherlands':'netherlands','Switzerland':'switzerland',
+    'Portugal':'portugal','Spain':'spain','Italy':'italy',
+    'Afghanistan':'afghanistan','Hong Kong S.A.R.':'hong kong','Hong Kong':'hong kong',
+  };
+  function featureToTag(feat) {
+    const n = feat?.properties?.name || feat?.properties?.NAME || feat?.properties?.admin || '';
+    return FEATURE_TO_TAG[n] || n.toLowerCase();
+  }
+
+  // -------- Country name map (topojson EN → PT-BR) --------
+  const COUNTRY_NAME_MAP = {
+    'Brazil':'Brasil','United States of America':'EUA','United States':'EUA',
+    'Hong Kong S.A.R.':'Hong Kong','Hong Kong':'Hong Kong',
+    'Argentina':'Argentina','Nigeria':'Nigéria','Japan':'Japão',
+    'India':'Índia','Mexico':'México','South Africa':'África do Sul',
+    'Australia':'Austrália','South Korea':'Coreia do Sul',
+    'Republic of Korea':'Coreia do Sul','China':'China',
+    'Russia':'Russia','Ukraine':'Ucrânia','France':'França',
+    'Germany':'Alemanha','United Kingdom':'Reino Unido',
+    'Israel':'Israel','Iran':'Irã','Turkey':'Turquia',
+    'Saudi Arabia':'Arábia Saudita','Egypt':'Egito','Canada':'Canadá',
+  };
+  function ptCountryFromFeature(feat) {
+    const n = feat?.properties?.name || feat?.properties?.NAME || feat?.properties?.admin;
+    return n ? (COUNTRY_NAME_MAP[n] || n) : null;
+  }
+
+  // -------- Country hover + click --------
+  let hoverFeat = null, hoverG = null, hoverPath = null;
+
+  function ensureHoverNodes() {
+    if (hoverG) return true;
+    hoverG = svg.querySelector('#g-hover');
+    if (!hoverG) return false;
+    hoverPath = document.createElementNS(SVGNS, 'path');
+    hoverPath.setAttribute('fill', 'rgba(255,85,0,0.10)');
+    hoverPath.setAttribute('stroke', '#FF5500');
+    hoverPath.setAttribute('stroke-width', '1.1');
+    hoverPath.setAttribute('pointer-events', 'none');
+    hoverG.appendChild(hoverPath);
+    return true;
+  }
+
+  const countryLabelEl  = document.getElementById('country-label');
+  const panel           = document.getElementById('country-panel');
+  const panelTitle      = document.getElementById('cp-title');
+  const panelCount      = document.getElementById('cp-count');
+  const panelList       = document.getElementById('cp-list');
+  const panelClose      = document.getElementById('cp-close');
+
+  function esc(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openCountryPanel(tag, displayName) {
+    const items = EVENTOS.filter(e => e.tag === tag || (e.country||'').toLowerCase() === (tag||'').toLowerCase());
+    panelTitle.textContent = displayName || tag;
+    panelCount.textContent = items.length === 0
+      ? 'Nenhuma publicação ainda'
+      : items.length + ' publicaç' + (items.length === 1 ? 'ão' : 'ões');
+    panelList.innerHTML = items.length
+      ? items.map(ev => `<a class="cp-item" href="${esc(ev.url)}" target="_blank" rel="noopener">
+          <span class="cp-cat">${esc(ev.category)}</span>
+          <span class="cp-title">${esc(ev.title)}</span>
+          <span class="cp-meta">${esc(ev.source||ev.author)} · ${esc(ev.date)}</span>
+        </a>`).join('')
+      : `<div class="cp-empty">Ainda não cobrimos esse país — volte em breve.</div>`;
+    panel.classList.add('on');
+  }
+  function closeCountryPanel() { panel.classList.remove('on'); }
+  if (panelClose) panelClose.addEventListener('click', closeCountryPanel);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCountryPanel(); });
+
+  function setHoverFeat(feat) {
+    if (feat === hoverFeat) return;
+    hoverFeat = feat;
+    dirty = true;
+    if (!ensureHoverNodes()) return;
+    if (feat) {
+      const display = feat.properties?.name || feat.properties?.NAME || 'Região';
+      const tag     = featureToTag(feat);
+      const count   = EVENTOS.filter(e => e.tag === tag || (e.country||'').toLowerCase() === tag).length;
+      countryLabelEl.querySelector('.cl-name').textContent = display;
+      const meta = countryLabelEl.querySelector('.cl-meta');
+      meta.textContent = count === 0 ? 'sem publicações' : count + ' publicaç' + (count === 1 ? 'ão' : 'ões');
+      meta.classList.toggle('has', count > 0);
+      countryLabelEl.classList.add('on');
+      svg.style.cursor = 'pointer';
+    } else {
+      countryLabelEl?.classList.remove('on');
+      svg.style.cursor = '';
+    }
+  }
+
+  svg.addEventListener('mousemove', (e) => {
+    if (dragStart) { setHoverFeat(null); return; }
+    if (!countriesFC.features.length) return;
+    const rect = svg.getBoundingClientRect();
+    const sx = ((e.clientX - rect.left) / rect.width) * GLOBE_SIZE;
+    const sy = ((e.clientY - rect.top)  / rect.height) * GLOBE_SIZE;
+    const ll = projection.invert([sx, sy]);
+    if (!ll || isNaN(ll[0])) { setHoverFeat(null); return; }
+    if (hoverFeat && d3.geoContains(hoverFeat, ll)) {
+      const stage = document.getElementById('globe-stage');
+      const sr = stage.getBoundingClientRect();
+      countryLabelEl.style.left = (e.clientX - sr.left + 14) + 'px';
+      countryLabelEl.style.top  = (e.clientY - sr.top  + 14) + 'px';
+      return;
+    }
+    let found = null;
+    for (const feat of countriesFC.features) {
+      if (d3.geoContains(feat, ll)) { found = feat; break; }
+    }
+    setHoverFeat(found);
+    if (found) {
+      const stage = document.getElementById('globe-stage');
+      const sr = stage.getBoundingClientRect();
+      countryLabelEl.style.left = (e.clientX - sr.left + 14) + 'px';
+      countryLabelEl.style.top  = (e.clientY - sr.top  + 14) + 'px';
+    }
+  });
+  svg.addEventListener('mouseleave', () => setHoverFeat(null));
+
+  svg.addEventListener('click', (e) => {
+    if (dragMoved > 4) return;
+    if (e.target.closest?.('circle.evt')) return;
+    if (!countriesFC.features.length) return;
+    const rect = svg.getBoundingClientRect();
+    const sx = ((e.clientX - rect.left) / rect.width) * GLOBE_SIZE;
+    const sy = ((e.clientY - rect.top)  / rect.height) * GLOBE_SIZE;
+    const ll = projection.invert([sx, sy]);
+    if (!ll || isNaN(ll[0])) return;
+    for (const feat of countriesFC.features) {
+      if (d3.geoContains(feat, ll)) {
+        const display = feat.properties?.name || feat.properties?.NAME || 'Região';
+        openCountryPanel(featureToTag(feat), display);
+        autoRotate = false;
+        return;
+      }
+    }
+    closeCountryPanel();
+  });
 
   // Tooltip (hover-only, auto-dismiss)
   const tip = document.getElementById('tip');
@@ -1591,7 +1865,6 @@ async function setupGlobe() {
   window.addEventListener('scroll', hideTip, { passive: true });
 
   // -------- Animation loop (mutate attrs; rAF-throttled) --------
-  let dirty = true;
   let last = performance.now();
   const coords = document.getElementById('globe-coords');
   let coordTick = 0;
@@ -1627,6 +1900,11 @@ async function setupGlobe() {
         node.setAttribute('opacity', (0.28 + cosD * 0.42).toFixed(2));
       }
 
+      // Update hover country path
+      if (hoverPath) {
+        hoverPath.setAttribute('d', hoverFeat ? (path(hoverFeat) || '') : '');
+      }
+
       // Update events
       for (const ev of sortedEvents) {
         const node = evtNodes.get(ev.id);
@@ -1656,13 +1934,209 @@ async function setupGlobe() {
     rebuildDots: () => { buildDots(); rebuildDotNodes(); dirty = true; },
     setAutoRotate: (v) => { autoRotate = v; cfg.autoRotate = v; dirty = true; },
     markDirty: () => { dirty = true; },
+    rebuildMarkers: (events) => { buildMarkersFromEvents(events); },
+    geoTagArticles: (articles) => {
+      if (!countriesFC.features.length) return;
+      for (const ev of articles) {
+        if (ev.baseLat == null) continue;
+        for (const feat of countriesFC.features) {
+          if (d3.geoContains(feat, [ev.baseLon, ev.baseLat])) {
+            ev.tag     = featureToTag(feat);
+            ev.country = feat.properties?.name || feat.properties?.NAME || ev.country;
+            break;
+          }
+        }
+      }
+    },
   };
+}
+
+/* ==========================================================
+   GLOBE NEWS — geo dictionary + live fetch
+========================================================== */
+const GEO_DICT = {
+  // Americas
+  'brazil': [-15.78, -47.93], 'brasil': [-15.78, -47.93], 'brasília': [-15.78, -47.93],
+  'united states': [38.90, -77.03], 'trump': [38.90, -77.03], 'washington': [38.90, -77.03],
+  'argentina': [-34.61, -58.37], 'buenos aires': [-34.61, -58.37],
+  'mexico': [19.43, -99.13], 'méxico': [19.43, -99.13],
+  'canada': [45.42, -75.69], 'ottawa': [45.42, -75.69],
+  'colombia': [4.71, -74.07], 'venezuela': [10.49, -66.88],
+  'chile': [-33.45, -70.67], 'peru': [-12.04, -77.03],
+  // Europe
+  'united kingdom': [51.51, -0.13], 'britain': [51.51, -0.13], 'london': [51.51, -0.13],
+  'germany': [52.52, 13.40], 'berlin': [52.52, 13.40],
+  'france': [48.85, 2.35], 'paris': [48.85, 2.35],
+  'russia': [55.75, 37.62], 'moscow': [55.75, 37.62], 'putin': [55.75, 37.62],
+  'ukraine': [50.45, 30.52], 'kyiv': [50.45, 30.52], 'zelensky': [50.45, 30.52],
+  'spain': [40.42, -3.70], 'italy': [41.90, 12.49], 'rome': [41.90, 12.49],
+  'netherlands': [52.37, 4.90], 'poland': [52.23, 21.01],
+  'switzerland': [46.95, 7.44], 'sweden': [59.33, 18.07],
+  'portugal': [38.72, -9.14], 'lisbon': [38.72, -9.14],
+  'greece': [37.98, 23.73], 'turkey': [39.93, 32.86], 'erdogan': [39.93, 32.86],
+  // Middle East
+  'israel': [31.77, 35.22], 'tel aviv': [32.08, 34.78], 'netanyahu': [31.77, 35.22],
+  'iran': [35.69, 51.39], 'tehran': [35.69, 51.39],
+  'saudi arabia': [24.69, 46.72], 'riyadh': [24.69, 46.72],
+  'iraq': [33.34, 44.40], 'baghdad': [33.34, 44.40],
+  'syria': [33.51, 36.29], 'lebanon': [33.89, 35.50],
+  'yemen': [15.55, 44.21], 'gaza': [31.52, 34.45],
+  'uae': [24.45, 54.37], 'dubai': [25.20, 55.27],
+  'qatar': [25.29, 51.53], 'kuwait': [29.37, 47.98],
+  // Asia
+  'china': [39.91, 116.39], 'beijing': [39.91, 116.39], 'xi jinping': [39.91, 116.39],
+  'japan': [35.68, 139.69], 'tokyo': [35.68, 139.69],
+  'india': [28.61, 77.21], 'new delhi': [28.61, 77.21], 'modi': [28.61, 77.21],
+  'south korea': [37.57, 126.98], 'seoul': [37.57, 126.98],
+  'north korea': [39.02, 125.76], 'kim jong': [39.02, 125.76],
+  'taiwan': [25.04, 121.56], 'hong kong': [22.30, 114.17],
+  'singapore': [1.35, 103.82], 'indonesia': [-6.21, 106.85],
+  'pakistan': [33.72, 73.04], 'afghanistan': [34.52, 69.18],
+  'vietnam': [21.03, 105.85], 'thailand': [13.76, 100.50],
+  'malaysia': [3.15, 101.69], 'philippines': [14.60, 120.98],
+  // Africa
+  'south africa': [-25.75, 28.19], 'nigeria': [9.07, 7.40],
+  'egypt': [30.06, 31.25], 'cairo': [30.06, 31.25],
+  'ethiopia': [9.03, 38.74], 'kenya': [-1.29, 36.82],
+  'morocco': [34.01, -6.85], 'ghana': [5.55, -0.20],
+  'sudan': [15.55, 32.53], 'congo': [-4.32, 15.32],
+  // Oceania
+  'australia': [-35.28, 149.13], 'sydney': [-33.87, 151.21],
+  'new zealand': [-41.29, 174.78],
+};
+
+// Sort longest-first to avoid 'iran' matching inside 'ukraine'
+const GEO_ENTRIES = Object.entries(GEO_DICT).sort((a, b) => b[0].length - a[0].length);
+
+// Aliases → canonical tag (para que trump/washington/paris batam no país certo)
+const TAG_CANONICAL = {
+  'trump':'united states','washington':'united states',
+  'paris':'france','berlin':'germany',
+  'london':'united kingdom','britain':'united kingdom',
+  'moscow':'russia','putin':'russia',
+  'beijing':'china','xi jinping':'china',
+  'brasília':'brazil','brasil':'brazil',
+  'buenos aires':'argentina','cairo':'egypt',
+  'tel aviv':'israel','netanyahu':'israel',
+  'zelensky':'ukraine','kyiv':'ukraine',
+  'erdogan':'turkey','modi':'india','new delhi':'india',
+  'tokyo':'japan','seoul':'south korea','kim jong':'north korea',
+  'tehran':'iran','riyadh':'saudi arabia','dubai':'uae',
+  'sydney':'australia','rome':'italy','lisbon':'portugal',
+  'ottawa':'canada','mexico':'mexico',
+};
+
+function geoFromText(text) {
+  const t = text.toLowerCase();
+  for (const [kw, [lat, lon]] of GEO_ENTRIES) {
+    const idx = t.indexOf(kw);
+    if (idx === -1) continue;
+    const before = idx === 0 || /\W/.test(t[idx - 1]);
+    const after  = idx + kw.length >= t.length || /\W/.test(t[idx + kw.length]);
+    if (before && after) {
+      const tag = TAG_CANONICAL[kw] || kw;
+      return { lat, lon, tag, country: tag.charAt(0).toUpperCase() + tag.slice(1) };
+    }
+  }
+  return null;
+}
+
+async function fetchGlobeNews() {
+  const GUARDIAN_KEY = 'test';
+  const REDDIT_SUBS = [
+    { sub: 'worldnews',    name: 'Reddit/worldnews' },
+    { sub: 'geopolitics',  name: 'Reddit/geopolitics' },
+    { sub: 'europe',       name: 'Reddit/europe' },
+    { sub: 'MiddleEast',   name: 'Reddit/MiddleEast' },
+    { sub: 'LatinAmerica', name: 'Reddit/LatinAmerica' },
+    { sub: 'africa',       name: 'Reddit/africa' },
+    { sub: 'china',        name: 'Reddit/china' },
+    { sub: 'japan',        name: 'Reddit/japan' },
+    { sub: 'russia',       name: 'Reddit/russia' },
+  ];
+
+  async function fetchReddit(sub, name) {
+    const data = await fetch(
+      `https://www.reddit.com/r/${sub}/top.json?limit=30&t=day`,
+      { headers: { 'Accept': 'application/json' } }
+    ).then(r => r.json());
+    return (data?.data?.children || []).map(c => ({
+      title: c.data.title,
+      link:  c.data.url,
+      source: name,
+    })).filter(x => x.title && !x.title.startsWith('['));
+  }
+
+  const results = [];
+  const seen    = new Set();
+
+  function addArticle(id, title, url, source) {
+    const geo = geoFromText(title);
+    if (!geo) return;
+    const dedup = title.toLowerCase().slice(0, 50);
+    if (seen.has(dedup)) return;
+    seen.add(dedup);
+    // Jitter ±2.5° para markers do mesmo país não se sobreponham
+    const jLat = geo.lat + (Math.random() - 0.5) * 5;
+    const jLon = geo.lon + (Math.random() - 0.5) * 5;
+    results.push({
+      id, url, source,
+      title: title.length > 90 ? title.slice(0, 87) + '…' : title,
+      country: geo.country,
+      tag: geo.tag,
+      baseLat: geo.lat, baseLon: geo.lon,           // coords canónicas para geo-tag
+      lat: Math.max(-85, Math.min(85, jLat)),        // coords com jitter para display
+      lon: ((jLon + 180) % 360) - 180,
+      date: new Date().toISOString().slice(0, 10),
+      author: source,
+      category: 'MUNDO',
+    });
+  }
+
+  // Guardian API
+  try {
+    const gData = await fetch(
+      `https://content.guardianapis.com/search?api-key=${GUARDIAN_KEY}&page-size=30&order-by=newest`
+    ).then(r => r.json());
+    for (const item of (gData.response?.results || [])) {
+      addArticle('g-' + item.id.replace(/\//g, '-'), item.webTitle, item.webUrl, 'The Guardian');
+    }
+  } catch(e) { console.warn('[globe] guardian failed', e); }
+
+  // Reddit — CORS nativo, sem proxy, sem chave
+  await Promise.allSettled(REDDIT_SUBS.map(async ({ sub, name }) => {
+    try {
+      const items = await fetchReddit(sub, name);
+      for (const item of items) {
+        const id = 'rd-' + sub + '-' + item.title.slice(0, 20).replace(/\W/g, '');
+        addArticle(id, item.title, item.link, item.source);
+      }
+    } catch(e) { console.warn(`[globe] reddit ${sub} failed`, e); }
+  }));
+
+  if (results.length === 0) return; // keep static markers as fallback
+
+  // Geo-tag por posição: d3.geoContains diz qual país contém as coords base
+  if (window._globe?.geoTagArticles) window._globe.geoTagArticles(results);
+
+  EVENTOS = results.slice(0, 28);
+
+  // Update stats
+  const gsEl = document.getElementById('gs-events');
+  if (gsEl) gsEl.textContent = String(EVENTOS.length).padStart(2, '0');
+  const gsLatestEl = document.getElementById('gs-latest');
+  if (gsLatestEl) gsLatestEl.textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase().replace('.', '');
+
+  if (window._globe?.rebuildMarkers) window._globe.rebuildMarkers(EVENTOS);
 }
 
 /* ==========================================================
    KICK OFF
 ========================================================== */
-loadAll().catch(err => console.error(err));
+loadAll()
+  .then(() => fetchGlobeNews())
+  .then(() => setInterval(fetchGlobeNews, 5 * 60 * 1000))
+  .catch(err => console.error(err));
 
 /* ==========================================================
    MARKET TICKER
@@ -1737,17 +2211,19 @@ function fgClass(v) {
 // In-memory snapshot of each ticker value
 const tickerState = Object.fromEntries(TICKER_ORDER.map(x => [x.key, { value: null, change: null, extra: null }]));
 
-function renderTickerRow() {
+const prevTickerValues = {};
+
+function renderTickerRow(changedKeys = new Set()) {
   const track = document.getElementById('ticker-track');
   if (!track) return;
   const itemHtml = TICKER_ORDER.map(row => {
     const st = tickerState[row.key];
     if (st.value == null) {
-      return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-skel"></span></span>`;
+      return `<span class="tk-item" data-key="${row.key}"><span class="tk-lbl">${row.label}</span><span class="tk-skel"></span></span>`;
     }
     if (row.src === 'alternative') {
       const fg = fgClass(st.value);
-      return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-val">${st.value}</span><span class="tk-chg ${fg.cls}">${fg.label}</span></span>`;
+      return `<span class="tk-item" data-key="${row.key}"><span class="tk-lbl">${row.label}</span><span class="tk-val">${st.value}</span><span class="tk-chg ${fg.cls}">${fg.label}</span></span>`;
     }
     let valStr;
     if (row.currency === 'BRL')     valStr = fmtBRL(st.value);
@@ -1756,10 +2232,33 @@ function renderTickerRow() {
     else valStr = fmtUSD(st.value);
     const chg = st.change ?? 0;
     const chgCls = chg >= 0 ? 'up' : 'down';
-    return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-val">${valStr}</span><span class="tk-chg ${chgCls}">${fmtChange(chg)}</span></span>`;
+    return `<span class="tk-item" data-key="${row.key}"><span class="tk-lbl">${row.label}</span><span class="tk-val">${valStr}</span><span class="tk-chg ${chgCls}">${fmtChange(chg)}</span></span>`;
   }).join('');
   // Duplicate for seamless loop
   track.innerHTML = itemHtml + itemHtml;
+
+  // Wave: varredura de luz no container do ticker
+  const ticker = document.getElementById('ticker');
+  if (ticker) {
+    const old = ticker.querySelector('.ticker-sweep');
+    if (old) old.remove();
+    const sweep = document.createElement('div');
+    sweep.className = 'ticker-sweep';
+    ticker.appendChild(sweep);
+    sweep.addEventListener('animationend', () => sweep.remove(), { once: true });
+  }
+
+  // Flash laranja nos ativos que mudaram de valor
+  if (changedKeys.size > 0) {
+    track.querySelectorAll('.tk-item').forEach(el => {
+      if (changedKeys.has(el.dataset.key)) {
+        el.classList.remove('flash');
+        void el.offsetWidth;
+        el.classList.add('flash');
+        el.addEventListener('animationend', () => el.classList.remove('flash'), { once: true });
+      }
+    });
+  }
 }
 
 // ---- Data fetchers ----
@@ -1801,11 +2300,10 @@ async function fetchFearGreed() {
   }
 }
 
-/* Mock drift for APIs that require server proxy (Finnhub/Brapi).
-   In production these would live at /api/ticker.  */
+/* Seed apenas para Finnhub (índices EUA) — Brapi agora é real */
 function seedMocks() {
   for (const row of TICKER_ORDER) {
-    if ((row.src === 'finnhub' || row.src === 'brapi') && tickerState[row.key].value == null) {
+    if (row.src === 'finnhub' && tickerState[row.key].value == null) {
       tickerState[row.key].value = row.seed;
       tickerState[row.key].change = (Math.random() - 0.4) * 1.8;
     }
@@ -1813,7 +2311,7 @@ function seedMocks() {
 }
 function driftMocks() {
   for (const row of TICKER_ORDER) {
-    if (row.src === 'finnhub' || row.src === 'brapi') {
+    if (row.src === 'finnhub') {
       const st = tickerState[row.key];
       if (st.value != null) {
         const delta = (Math.random() - 0.5) * 0.004;
@@ -1824,17 +2322,58 @@ function driftMocks() {
   }
 }
 
+async function fetchBrapi() {
+  const KEY = 'ksYSVobV2UYzfirm3K8HEb';
+  // Plano free: 1 ativo por request — fetch em paralelo
+  const tickers = ['^BVSP', 'PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'BBAS3'];
+  await Promise.allSettled(tickers.map(async ticker => {
+    try {
+      const data = await fetch(`https://brapi.dev/api/quote/${ticker}?token=${KEY}`)
+        .then(r => r.json());
+      const r = (data.results || [])[0];
+      if (r && tickerState[r.symbol] !== undefined) {
+        tickerState[r.symbol].value  = r.regularMarketPrice;
+        tickerState[r.symbol].change = r.regularMarketChangePercent;
+      }
+    } catch(err) { console.warn(`[ticker] brapi ${ticker} failed`, err); }
+  }));
+
+  try {
+    // USD/BRL via AwesomeAPI (gratuito, CORS aberto)
+    const data = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL')
+      .then(r => r.json());
+    const rate = data.USDBRL;
+    if (rate) {
+      tickerState['USD-BRL'].value  = parseFloat(rate.bid);
+      tickerState['USD-BRL'].change = parseFloat(rate.pctChange);
+    }
+  } catch(err) { console.warn('[ticker] awesomeapi currency failed', err); }
+}
+
 async function refreshTicker() {
-  await Promise.all([fetchBinance(), fetchFearGreed()]);
+  // Snapshot antes de buscar
+  const snapshot = {};
+  for (const row of TICKER_ORDER) snapshot[row.key] = tickerState[row.key].value;
+
+  await Promise.all([fetchBinance(), fetchFearGreed(), fetchBrapi()]);
   driftMocks();
-  renderTickerRow();
+
+  // Detecta quais mudaram
+  const changed = new Set();
+  for (const row of TICKER_ORDER) {
+    const prev = snapshot[row.key];
+    const curr = tickerState[row.key].value;
+    if (prev != null && curr != null && prev !== curr) changed.add(row.key);
+  }
+
+  renderTickerRow(changed);
 }
 
 // Init
 seedMocks();
 renderTickerRow();           // skeletons + mock seeds
 refreshTicker();             // live fetch
-setInterval(refreshTicker, 120000);  // every 120s per spec
+setInterval(refreshTicker, 10000);  // 10s
 </script>
 </body>
 </html>
