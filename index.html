@@ -1,0 +1,1807 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WeSearch — Research Cripto</title>
+<meta name="description" content="A Nova Era do Research Cripto. Inteligência coletiva em Macro, On-Chain, Geopolítica e Insights de Mercado." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface-2: #141414;
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
+  --fg: #f5f5f0;
+  --muted: #8a8580;
+  --muted-dim: #5c5853;
+  --orange: #FF5500;
+  --orange-dim: #cc4400;
+  --orange-deep: #B23C00;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+body { line-height: 1.55; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+img { max-width: 100%; display: block; }
+
+::selection { background: var(--orange); color: var(--bg); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--orange-deep); }
+
+/* ============ LAYOUT ============ */
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mono.orange { color: var(--orange); }
+
+.serif { font-family: var(--serif); }
+
+.heading {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.2vw, 3.2rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  font-variation-settings: "opsz" 96;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+.section-head .label { margin-bottom: 0.9rem; display: block; }
+.section-head .tagline {
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 46ch;
+  margin-top: 1rem;
+}
+.section-head .right { text-align: right; white-space: nowrap; }
+
+.ghost-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 4px;
+  transition: color .25s var(--ease), border-color .25s var(--ease);
+}
+.ghost-link:hover { color: var(--orange); border-color: var(--orange); }
+.ghost-link .arr { color: var(--orange); transition: transform .3s var(--ease); }
+.ghost-link:hover .arr { transform: translate(2px,-2px); }
+
+section { padding: clamp(4rem, 8vw, 7rem) 0; }
+section.tight { padding: 0; }
+
+/* Tightened transitions between specific sections */
+#analistas    { padding-top: clamp(2rem, 4vw, 3.25rem); }   /* after #artigos */
+#parceiros    { padding-top: clamp(2rem, 4vw, 3.25rem);
+                padding-bottom: clamp(2.5rem, 4.5vw, 3.75rem); } /* before footer */
+#globo        { padding-top: 0.25rem; padding-bottom: 0; }  /* collapse gap after ticker + before articles */
+#artigos      { padding-top: clamp(1.25rem, 2.5vw, 2rem); } /* tighten gap after Cobertura Global */
+
+/* ============ NAV ============ */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem clamp(1.25rem, 4vw, 3.5rem);
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav .brand {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+}
+.nav .brand .dot { color: var(--orange); }
+.nav ul { list-style: none; display: flex; gap: 1.6rem; }
+.nav ul a {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color .2s var(--ease);
+}
+.nav ul a:hover { color: var(--orange); }
+@media (max-width: 720px) { .nav ul { display: none; } }
+
+/* ============ HERO ============ */
+.hero {
+  min-height: 92vh;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  padding-top: 6rem;
+  padding-bottom: 4rem;
+  position: relative;
+}
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 5rem; gap: 3rem; }
+}
+
+.hero-left > * { opacity: 0; transform: translateY(10px); animation: rise .9s var(--ease) forwards; }
+.hero-left > *:nth-child(1) { animation-delay: 0.05s; }
+.hero-left > *:nth-child(2) { animation-delay: 0.2s; }
+.hero-left > *:nth-child(3) { animation-delay: 0.35s; }
+.hero-left > *:nth-child(4) { animation-delay: 0.5s; }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+.hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 2.2rem;
+}
+.hero-label .diamond {
+  width: 7px; height: 7px;
+  background: var(--orange);
+  transform: rotate(45deg);
+  display: inline-block;
+}
+.hero-label .txt {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--orange);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(3.2rem, 9vw, 7.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-variation-settings: "opsz" 144;
+  margin-bottom: 1.8rem;
+}
+.hero-title .dot { color: var(--orange); }
+
+.hero-sub {
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.55;
+  margin-bottom: 2.8rem;
+}
+.hero-sub em { color: var(--fg); font-style: normal; }
+
+.hero-actions { display: flex; gap: 1.8rem; flex-wrap: wrap; }
+
+.hero-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 440px;
+  opacity: 0;
+  animation: rise 1.2s var(--ease) 0.6s forwards;
+}
+.hero-mark {
+  position: relative;
+  width: min(140%, 920px);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: -8%;
+}
+.hero-mark::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at center, rgba(255,85,0,0.12) 0%, rgba(255,85,0,0.04) 30%, transparent 55%);
+  filter: blur(20px);
+  z-index: 0;
+}
+.hero-mark > svg.hero-mark-rings { position: absolute !important; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92% !important; height: auto; z-index: 0; }
+.hero-mark > svg { position: relative; z-index: 1; width: 68%; height: auto; }
+.hero-mark > svg.hero-mark-streams { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Data streams — lines with pulsing dots that travel across the logo */
+.hero-mark-streams {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 3;                 /* above the logo so streams appear to pass over it */
+  mix-blend-mode: screen;
+  pointer-events: none;
+  overflow: visible;
+}
+.hero-mark-streams .trail {
+  fill: none;
+  stroke: rgba(255, 160, 80, 0.55);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 0.01 38;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 120, 40, 0.7));
+  animation: stream-move 4s linear infinite;
+}
+.hero-mark-streams .trail.t2 { stroke: rgba(255, 200, 120, 0.45); stroke-width: 1;    stroke-dasharray: 0.01 52; animation-duration: 5.6s; animation-delay: -1.2s; }
+.hero-mark-streams .trail.t3 { stroke: rgba(255, 140, 60, 0.60);  stroke-width: 1.4;  stroke-dasharray: 0.01 44; animation-duration: 4.8s; animation-delay: -2.4s; }
+.hero-mark-streams .trail.t4 { stroke: rgba(255, 170, 90, 0.40);  stroke-width: 0.9;  stroke-dasharray: 0.01 60; animation-duration: 6.4s; animation-delay: -0.6s; }
+.hero-mark-streams .trail.t5 { stroke: rgba(255, 210, 140, 0.50); stroke-width: 1.1;  stroke-dasharray: 0.01 48; animation-duration: 5.2s; animation-delay: -3.1s; }
+.hero-mark-streams .trail.t6 { stroke: rgba(255, 130, 50, 0.55);  stroke-width: 1.3;  stroke-dasharray: 0.01 56; animation-duration: 5.8s; animation-delay: -1.8s; }
+@keyframes stream-move {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -200; }
+}
+/* The "dot" at the leading edge of each pulse, created with a second overlaid stroke */
+.hero-mark-streams .dot {
+  fill: none;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px rgba(255, 120, 40, 0.95));
+  stroke-dasharray: 3 200;
+  animation: stream-move 4s linear infinite;
+}
+.hero-mark-streams .dot.d1 { stroke: #ffd4a8; stroke-width: 3.2; animation-duration: 4s;   animation-delay: 0s; }
+.hero-mark-streams .dot.d2 { stroke: #ffbc82; stroke-width: 2.8; animation-duration: 5.6s; animation-delay: -1.2s; }
+.hero-mark-streams .dot.d3 { stroke: #ffcf9a; stroke-width: 3.4; animation-duration: 4.8s; animation-delay: -2.4s; }
+.hero-mark-streams .dot.d4 { stroke: #ffd8b0; stroke-width: 2.6; animation-duration: 6.4s; animation-delay: -0.6s; }
+.hero-mark-streams .dot.d5 { stroke: #ffe2c0; stroke-width: 3.0; animation-duration: 5.2s; animation-delay: -3.1s; }
+.hero-mark-streams .dot.d6 { stroke: #ffbd7a; stroke-width: 3.3; animation-duration: 5.8s; animation-delay: -1.8s; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-mark-streams .trail, .hero-mark-streams .dot { animation: none; }
+}
+.hero-mark-img {
+  position: relative;
+  z-index: 2;
+  width: 96%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 18px 64px rgba(255, 85, 0, 0.38)) drop-shadow(0 6px 28px rgba(255, 85, 0, 0.28));
+  transition: transform .5s var(--ease), filter .5s var(--ease);
+}
+.hero-mark:hover .hero-mark-img {
+  /* hover scale disabled */
+}
+
+.hero-meta {
+  position: absolute;
+  bottom: 1rem;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hero-meta .live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0 rgba(255,85,0,0.5);
+  animation: livepulse 2s infinite;
+}
+@keyframes livepulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,85,0,0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(255,85,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,85,0,0); }
+}
+
+/* Hero corner tickers */
+.hero-tick {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--muted-dim);
+  text-transform: uppercase;
+}
+.hero-tick.tl { top: 6rem; right: 0; text-align: right; }
+@media (max-width: 900px) { .hero-tick.tl { display:none; } }
+
+/* ============ CREDIBILITY ============ */
+.credibility {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: clamp(2rem, 4vw, 3rem) 0;
+  gap: 1rem;
+}
+@media (max-width: 760px) {
+  .credibility { grid-template-columns: repeat(2, 1fr); row-gap: 2.4rem; }
+}
+.metric { padding: 0 1.5rem; border-left: 1px solid var(--border); }
+.metric:first-child { border-left: 0; padding-left: 0; }
+@media (max-width: 760px) {
+  .metric:nth-child(odd) { border-left: 0; padding-left: 0; }
+}
+.metric .num {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--orange);
+  margin-bottom: 1rem;
+}
+.metric .lbl {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ============ GLOBE ============ */
+.globe-wrap {
+  display: grid;
+  grid-template-columns: 0.9fr 1.3fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  min-height: min(85vh, 900px);
+}
+@media (max-width: 960px) {
+  .globe-wrap { grid-template-columns: 1fr; min-height: auto; gap: 2.5rem; }
+}
+.globe-copy { position: sticky; top: 6rem; align-self: start; }
+.globe-copy .label { margin-bottom: 1.5rem; display: block; }
+.globe-copy .heading { margin-bottom: 1.5rem; }
+.globe-copy .heading .dot { color: var(--orange); }
+.globe-copy p { color: var(--muted); font-size: 0.98rem; max-width: 42ch; margin-bottom: 2rem; }
+
+.globe-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+.globe-stats .gs {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.globe-stats .gs b {
+  display: block;
+  color: var(--orange);
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
+}
+
+.globe-stage {
+  position: relative;
+  aspect-ratio: 1;
+  max-width: 720px;
+  width: 100%;
+  margin-left: auto;
+}
+#globe-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+#globe-svg:active { cursor: grabbing; }
+#globe-svg circle.land { fill: var(--orange-deep); opacity: 0.48; }
+#globe-svg circle.evt {
+  fill: var(--orange);
+  stroke: var(--bg);
+  stroke-width: 1.2;
+  cursor: pointer;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: none;
+}
+#globe-svg circle.evt:hover {
+  filter: drop-shadow(0 0 6px rgba(255,85,0,0.9));
+  animation: evtHoverPulse 1.1s ease-in-out infinite;
+}
+#globe-svg circle.evt.pulse {
+  animation: evtLatestPulse 2.2s ease-in-out infinite;
+}
+@keyframes evtHoverPulse {
+  0%, 100% { r: 5; }
+  50% { r: 8; }
+}
+@keyframes evtLatestPulse {
+  0%, 100% { r: 5; opacity: 1; }
+  50% { r: 7.5; opacity: 0.85; }
+}
+.globe-ring {
+  position: absolute;
+  inset: -2%;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.globe-ring.inner { inset: 10%; border-color: transparent; }
+.globe-ring.crosshair {
+  inset: 0;
+  border: 0;
+}
+.globe-ring.crosshair::before, .globe-ring.crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--border);
+}
+.globe-ring.crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-0.5px); opacity: 0.5; }
+.globe-ring.crosshair::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-0.5px); opacity: 0.5; }
+
+.globe-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  padding: 0.8rem 1rem;
+  max-width: 280px;
+  opacity: 0;
+  transform: translate(-50%, -110%);
+  transition: opacity .2s var(--ease);
+  z-index: 10;
+}
+.globe-tooltip.on { opacity: 1; }
+.globe-tooltip .cat {
+  font-family: var(--mono); font-size: 0.6rem; color: var(--orange);
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 0.4rem; display: block;
+}
+.globe-tooltip .ttl {
+  font-family: var(--serif); font-size: 0.95rem; font-weight: 500; line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.globe-tooltip .meta {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--muted);
+  margin-top: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+
+.globe-legend {
+  position: absolute;
+  bottom: 0; left: 0;
+  display: flex; flex-direction: column; gap: 0.4rem;
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase;
+}
+.globe-legend .row { display: flex; align-items: center; gap: 0.6rem; }
+.globe-legend .sq {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--orange);
+}
+.globe-legend .sq.land { background: var(--orange-deep); opacity: 0.55; }
+
+/* Coords display */
+.globe-coords {
+  position: absolute;
+  top: 0; right: 0;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--muted-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: right;
+  line-height: 1.7;
+}
+
+/* ============ ARTICLES CAROUSEL ============ */
+.carousel-ctl {
+  display: flex; gap: 0.5rem; align-items: center;
+}
+.carousel-ctl button {
+  width: 38px; height: 38px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color .2s var(--ease), border-color .2s var(--ease);
+}
+.carousel-ctl button:hover:not(:disabled) { color: var(--orange); border-color: var(--orange); }
+.carousel-ctl button:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-ctl button svg { width: 14px; height: 14px; }
+
+.carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(260px, 25vw, 340px);
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 1.5rem;
+  /* Allow bleed on right by expanding out of .page padding using negative margin */
+  margin-right: calc(-1 * clamp(1.25rem, 4vw, 3.5rem));
+  padding-right: clamp(1.25rem, 4vw, 3.5rem);
+}
+.carousel::-webkit-scrollbar { display: none; }
+
+.progress {
+  height: 1px;
+  background: var(--border);
+  position: relative;
+  margin-top: 0.5rem;
+}
+.progress .bar {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: var(--orange);
+  width: 20%;
+  transition: width .15s linear, left .15s linear;
+}
+
+.card {
+  scroll-snap-align: start;
+  display: flex; flex-direction: column;
+  background: transparent;
+  border: 1px solid var(--border);
+  transition: transform .35s var(--ease), border-color .35s var(--ease);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.card:hover { transform: translateY(-5px); border-color: var(--border-strong); }
+.card .thumb {
+  aspect-ratio: 16 / 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  filter: grayscale(0.9) contrast(0.95);
+  transition: filter .4s var(--ease);
+}
+.card:hover .thumb { filter: grayscale(0) contrast(1); }
+
+/* Abstract editorial thumb (no external images — SVG-generated placeholders) */
+.thumb svg { width: 100%; height: 100%; display: block; }
+
+.card .body { padding: 1.25rem 1.25rem 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 0.9rem; }
+.card .meta-line {
+  display: flex; align-items: center; gap: 0.8rem;
+  font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+}
+.card .meta-line .n { color: var(--orange); }
+.card .meta-line .sep { color: var(--border-strong); }
+.card .ttl {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color .25s var(--ease);
+}
+.card:hover .ttl { color: var(--orange); }
+.card .excerpt {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card .foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: auto;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted);
+}
+.card .foot .arr { color: var(--orange); }
+
+/* ============ ANALYSTS ============ */
+.analysts {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(220px, 22vw, 280px);
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 1.5rem;
+  margin-right: calc(-1 * clamp(1.25rem, 4vw, 3.5rem));
+  padding-right: clamp(1.25rem, 4vw, 3.5rem);
+}
+.analysts::-webkit-scrollbar { display: none; }
+
+.analyst {
+  scroll-snap-align: start;
+  border: 1px solid var(--border);
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+  text-decoration: none; color: inherit;
+}
+.analyst:hover { border-color: var(--orange); transform: translateY(-4px); }
+.analyst .frame {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.analyst .frame .initials {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.8rem, 5vw, 4rem);
+  color: var(--orange-dim);
+  letter-spacing: -0.04em;
+  font-variation-settings: "opsz" 144;
+}
+.analyst .frame .ticks {
+  position: absolute;
+  inset: 8px;
+  border: 1px dashed rgba(255,85,0,0.18);
+  pointer-events: none;
+}
+.analyst .frame .tag {
+  position: absolute;
+  top: 8px; left: 8px;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--orange);
+  text-transform: uppercase;
+}
+.analyst .name {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.3rem;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+.analyst .spec {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.analyst .go {
+  margin-top: auto;
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.analyst .go .arr { color: var(--orange); }
+.analyst:hover .spec { color: var(--fg); }
+
+/* ============ PARTNERS ============ */
+.partners {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+}
+@media (max-width: 960px) { .partners { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .partners { grid-template-columns: 1fr; } }
+.partner {
+  aspect-ratio: 2.4 / 1;
+  display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem;
+  position: relative;
+  transition: background .3s var(--ease);
+  overflow: hidden;
+}
+.partner:hover { background: rgba(255,85,0,0.04); }
+.partner svg, .partner .plogo {
+  max-width: 70%; max-height: 56px;
+  color: var(--fg);
+  fill: currentColor;
+  transition: color .3s var(--ease), filter .3s var(--ease);
+}
+.partner:hover svg, .partner:hover .plogo { color: var(--orange); }
+.partner .ptag {
+  position: absolute;
+  top: 0.8rem; left: 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--muted-dim);
+  text-transform: uppercase;
+}
+.partner:hover .ptag { color: var(--orange); }
+
+/* ============ MARKET TICKER ============ */
+.ticker-section {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-top: clamp(3rem, 6vw, 5rem);
+  margin-bottom: 0;
+}
+.ticker {
+  height: 48px;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+  /* extend edge-to-edge even inside .page padding */
+  margin: 0 calc(-1 * clamp(1.25rem, 4vw, 3.5rem));
+}
+.ticker::before, .ticker::after {
+  content: "";
+  position: absolute; top: 0; bottom: 0; width: 80px; z-index: 2;
+  pointer-events: none;
+}
+.ticker::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.ticker::after  { right: 0; background: linear-gradient(to left,  var(--bg), transparent); }
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  animation: marquee 180s linear infinite;
+  will-change: transform;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (max-width: 720px) {
+  .ticker { height: 40px; }
+  .ticker-track { animation-duration: 150s; }
+}
+.tk-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0 2rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  position: relative;
+  white-space: nowrap;
+}
+.tk-item::after {
+  content: "·";
+  position: absolute; right: -0.25rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); opacity: 0.55;
+}
+.tk-item:last-child::after { content: ""; }
+.tk-lbl { font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; }
+.tk-val { font-weight: 400; color: var(--fg); }
+.tk-chg { font-weight: 400; font-size: 0.72rem; }
+.tk-chg.up   { color: #4ade80; opacity: 0.85; }
+.tk-chg.down { color: #ef4444; opacity: 0.85; }
+.tk-fg-ef { color: #ef4444; }  /* extreme fear */
+.tk-fg-f  { color: var(--muted); }
+.tk-fg-n  { color: var(--fg); }
+.tk-fg-g  { color: var(--orange-dim); }
+.tk-fg-eg { color: var(--orange); }
+.tk-skel { display: inline-block; width: 72px; height: 10px; background: var(--surface); opacity: 0.6; vertical-align: middle; animation: shimmer 1.4s ease-in-out infinite; }
+@keyframes shimmer { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; overflow-x: auto; scroll-snap-type: x mandatory; }
+}
+
+/* ============ FOOTER ============ */
+footer.foot {
+  border-top: 1px solid var(--border);
+  padding: clamp(2rem, 4vw, 3rem) 0 clamp(1.5rem, 3vw, 2.25rem);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 3rem;
+}
+@media (max-width: 760px) {
+  footer.foot { grid-template-columns: 1fr; gap: 2.5rem; }
+}
+footer .brand-big {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 2rem;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.8rem;
+}
+footer .brand-big .dot { color: var(--orange); }
+footer .tagline {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 38ch;
+  margin-bottom: 2rem;
+}
+footer .copy {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--muted-dim);
+  text-transform: uppercase;
+}
+footer .col h4 {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+footer .col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+footer .col ul a {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg);
+  transition: color .2s var(--ease);
+}
+footer .col ul a:hover { color: var(--orange); }
+footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }
+
+.signoff {
+  border-top: 1px solid var(--border);
+  padding: 1.2rem 0;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--muted-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.signoff .data-attr em { font-style: normal; color: var(--muted); }
+@media (max-width: 600px) { .signoff { flex-direction: column; gap: 0.6rem; } }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* SR-only */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ STICKY NAV ============ -->
+<nav class="nav" id="nav" aria-label="Principal">
+  <a href="#top" class="brand">WeSearch<span class="dot">.</span></a>
+  <ul>
+    <li><a href="#globo">Globo</a></li>
+    <li><a href="#artigos">Artigos</a></li>
+    <li><a href="#analistas">Analistas</a></li>
+    <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Newsletter ↗</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" style="height: 794.875px; text-align: left;">
+    <div class="hero-tick tl">
+      <div>BR · 19:42 BRT</div>
+      <div style="opacity:.6">Nº EDIÇÃO 042 / 2026</div>
+    </div>
+
+    <div class="hero-left">
+      <div class="hero-label">
+        <span class="diamond"></span>
+        <span class="txt">Research Collective</span>
+      </div>
+      <h1 class="hero-title">WeSearch<span class="dot">.</span></h1>
+      <p class="hero-sub">
+        A Nova Era do Research Cripto. Inteligência coletiva em <em>Macro</em>, <em>On-Chain</em>, <em>Geopolítica</em> e <em>Insights de Mercado</em>.
+      </p>
+      <div class="hero-actions">
+        <a href="#artigos" class="ghost-link">Últimas análises <span class="arr">↓</span></a>
+        <a href="https://wesearch.substack.com" target="_blank" rel="noopener" class="ghost-link">Assinar newsletter <span class="arr">↗</span></a>
+      </div>
+    </div>
+
+    <div class="hero-right" aria-hidden="true">
+      <div class="hero-mark" style="text-align: right;">
+        <!-- Decorative rings removed per request -->
+        <img src="assets/wesearch-logo.png?v=2" alt="WeSearch" class="hero-mark-img" style="object-fit: cover;" />
+        <svg class="hero-mark-streams" viewBox="0 0 320 320" aria-hidden="true" preserveAspectRatio="none">
+          <defs>
+            <path id="stream-a" d="M -20 40   C 60 110,  180 90,  340 200" />
+            <path id="stream-b" d="M 340 60  C 240 130, 140 100, -20 240" />
+            <path id="stream-c" d="M -20 160 C 80 120,  220 220, 340 140" />
+            <path id="stream-d" d="M 40 -20  C 140 80,  180 240, 280 340" />
+            <path id="stream-e" d="M 280 -20 C 200 100, 160 200,  40 340" />
+            <path id="stream-f" d="M -20 280 C 100 260, 200 80,  340 60" />
+          </defs>
+          <g class="streams-layer">
+            <use href="#stream-a" class="trail t1"/>
+            <use href="#stream-a" class="dot   d1"/>
+            <use href="#stream-b" class="trail t2"/>
+            <use href="#stream-b" class="dot   d2"/>
+            <use href="#stream-c" class="trail t3"/>
+            <use href="#stream-c" class="dot   d3"/>
+            <use href="#stream-d" class="trail t4"/>
+            <use href="#stream-d" class="dot   d4"/>
+            <use href="#stream-e" class="trail t5"/>
+            <use href="#stream-e" class="dot   d5"/>
+            <use href="#stream-f" class="trail t6"/>
+            <use href="#stream-f" class="dot   d6"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CREDIBILITY STRIP ============ -->
+  <section class="tight" style="padding: 0;">
+    <div class="credibility" aria-label="Métricas" style="padding: 25px 0 0; height: 150px;">
+      <div class="metric">
+        <div class="num">1.3K<span style="color:var(--orange-deep)">+</span></div>
+        <div class="lbl">Assinantes no Substack</div>
+      </div>
+      <div class="metric">
+        <div class="num" id="m-articles">47</div>
+        <div class="lbl">Análises publicadas</div>
+      </div>
+      <div class="metric">
+        <div class="num" id="m-countries">—</div>
+        <div class="lbl">Países cobertos</div>
+      </div>
+      <div class="metric">
+        <div class="num" id="m-analysts">—</div>
+        <div class="lbl">Analistas</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MARKET TICKER ============ -->
+  <section class="ticker-section tight" aria-label="Ticker de mercado">
+    <div class="ticker" id="ticker" role="marquee" aria-live="off">
+      <div class="ticker-track" id="ticker-track" style="height: 45px; flex-direction: row; padding: 0;"></div>
+    </div>
+  </section>
+
+  <!-- ============ GLOBE ============ -->
+  <section id="globo">
+    <div class="globe-wrap" style="padding: 50px 0 0;">
+      <div class="globe-copy">
+        <span class="mono orange label">◆ Cobertura Global</span>
+        <h2 class="heading">Onde a WeSearch está olhando<span class="dot">.</span></h2>
+        <p>
+          Cada ponto no globo é uma notica. Do Brasil ao Oriente Médio, da política monetária aos fluxos on-chain, observamos e cobrimos o que move o mercado cripto globalmente.
+        </p>
+        <div class="globe-stats">
+          <div class="gs"><b id="gs-events">—</b>Eventos no mapa</div>
+          <div class="gs"><b id="gs-latest">—</b>Mais recente</div>
+        </div>
+      </div>
+
+      <div class="globe-stage" id="globe-stage">
+        <div class="globe-ring"></div>
+        <div class="globe-ring crosshair"></div>
+        <div class="globe-coords" id="globe-coords">
+          <div>LAT 0.00°</div>
+          <div>LON 0.00°</div>
+          <div>PROJ · ORTHOGRAPHIC</div>
+        </div>
+        <svg id="globe-svg" viewBox="0 0 600 600" aria-hidden="true"></svg>
+        <div class="globe-tooltip" id="tip">
+          <span class="cat" id="tip-cat">CATEGORY</span>
+          <div class="ttl" id="tip-title">Title</div>
+          <div class="meta" id="tip-meta">META</div>
+        </div>
+        <div class="globe-legend" style="display:none">
+          <div class="row"><span class="sq land"></span><span>Cobertura geográfica</span></div>
+          <div class="row"><span class="sq"></span><span>Análise publicada</span></div>
+        </div>
+
+        <!-- SR fallback list -->
+        <ul class="sr-only" id="events-sr"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARTICLES ============ -->
+  <section id="artigos" style="height: 800px;">
+    <div class="section-head">
+      <div>
+        <span class="mono orange label">◆ Publicações</span>
+        <h2 class="heading" style="margin-top:1rem;">Últimas análises<span class="dot" style="color:var(--orange)">.</span></h2>
+      </div>
+      <div class="right" style="display:flex; flex-direction:column; align-items:flex-end; gap:1rem;">
+        <a href="https://wesearch.substack.com" target="_blank" rel="noopener" class="ghost-link">Ver todas <span class="arr">↗</span></a>
+        <div class="carousel-ctl">
+          <button id="art-prev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button id="art-next" aria-label="Próximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel" id="carousel-articles" aria-live="polite"></div>
+    <div class="progress"><div class="bar" id="art-bar"></div></div>
+  </section>
+
+  <!-- ============ ANALYSTS ============ -->
+  <section id="analistas">
+    <div class="section-head">
+      <div>
+        <span class="mono orange label">◆ Quem escreve</span>
+        <h2 class="heading" style="margin-top:1rem;">Analistas<span class="dot" style="color:var(--orange)">.</span></h2>
+        <p style="color:var(--muted); margin-top:1rem; max-width:52ch; font-size:0.95rem;">
+          A inteligência coletiva por trás da WeSearch. Cada análise é assinada. Cada perspectiva é auditável.
+        </p>
+      </div>
+      <div class="right">
+        <div class="carousel-ctl">
+          <button id="an-prev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button id="an-next" aria-label="Próximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="analysts" id="carousel-analysts"></div>
+    <div class="progress"><div class="bar" id="an-bar"></div></div>
+  </section>
+
+  <!-- ============ PARTNERS ============ -->
+  <section id="parceiros">
+    <div class="section-head">
+      <div>
+        <span class="mono orange label">◆ Parceiros</span>
+        <h2 class="heading" style="margin-top:1rem;">Com quem caminhamos<span class="dot" style="color:var(--orange)">.</span></h2>
+        <p style="color:var(--muted); margin-top:1rem; max-width:52ch; font-size:0.95rem;">
+          Instituições e projetos que compartilham da mesma obsessão por research bem feito.
+        </p>
+      </div>
+    </div>
+
+    <div class="partners" id="partners-grid"></div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div>
+      <div class="brand-big">WeSearch<span class="dot">.</span></div>
+      <p class="tagline">WeSearch, We Decode — A Nova Era do Research Cripto.</p>
+          </div>
+    <div class="col">
+      <h4>Navegação</h4>
+      <ul>
+        <li><a href="#globo">Globo</a></li>
+        <li><a href="#artigos">Artigos</a></li>
+        <li><a href="#analistas">Analistas</a></li>
+        <li><a href="#parceiros">Parceiros</a></li>
+        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Newsletter <span class="arr">↗</span></a></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h4>Canais</h4>
+      <ul>
+        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Substack <span class="arr">↗</span></a></li>
+        <li><a href="https://www.youtube.com/@wesearchdao" target="_blank" rel="noopener">Youtube <span class="arr">↗</span></a></li>
+        <li><a href="https://www.instagram.com/wesearchdao/" target="_blank" rel="noopener">Instagram <span class="arr">↗</span></a></li>
+        <li><a href="https://www.instagram.com/wesearchdao/" target="_blank" rel="noopener">LinkedIn <span class="arr">↗</span></a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <div class="signoff">
+    <span>© 2026 Weever Research · Todos os direitos reservados</span>
+    <span>Decoding crypto since 2024</span>
+  </div>
+
+</div>
+
+<!-- Tweaks panel removed: globe now rotates gently on its own -->
+
+<!-- ============ D3 + TOPOJSON ============ -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+
+<script>
+/* ==========================================================
+   CONFIG (tweakable defaults; persisted by host via markers)
+========================================================== */
+// Fixed, non-configurable globe settings — gentle auto-rotation, no UI tweaks
+const cfg = {
+  globeSpeed: 36,       // 2x faster than before (~166s per full revolution)
+  globeDensity: 2,      // 50% more dots (smaller step = denser)
+  autoRotate: true,
+  halftone: true
+};
+
+/* ==========================================================
+   DATA LOADING
+========================================================== */
+let EVENTOS = [];
+let ANALISTAS = [];
+let ARTIGOS = [];
+let PARCEIROS = [];
+
+async function loadAll() {
+  const [e, a, r, p] = await Promise.all([
+    fetch('data/eventos.json').then(r=>r.json()),
+    fetch('data/analistas.json').then(r=>r.json()),
+    fetch('data/artigos.json').then(r=>r.json()),
+    fetch('data/parceiros.json').then(r=>r.json())
+  ]);
+  EVENTOS = e; ANALISTAS = a; ARTIGOS = r; PARCEIROS = p;
+
+  // Credibility numbers
+  document.getElementById('m-articles').textContent = String(ARTIGOS.length + 35);
+  document.getElementById('m-countries').textContent = String(new Set(EVENTOS.map(x=>x.country)).size);
+  document.getElementById('m-analysts').textContent = String(ANALISTAS.length).padStart(2,'0');
+
+  // Globe stats
+  document.getElementById('gs-events').textContent = String(EVENTOS.length).padStart(2,'0');
+  const latest = EVENTOS.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  document.getElementById('gs-latest').textContent = latest ? new Date(latest.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).toUpperCase().replace('.','') : '—';
+
+  // SR list
+  const sr = document.getElementById('events-sr');
+  sr.innerHTML = EVENTOS.map(e => `<li>${e.date} — ${e.title} (${e.country})</li>`).join('');
+
+  renderArticles();
+  renderAnalysts();
+  renderPartners();
+  await setupGlobe();
+}
+
+/* ==========================================================
+   NAV (sticky at 80vh)
+========================================================== */
+const nav = document.getElementById('nav');
+
+/* ==========================================================
+   ARTICLES CAROUSEL
+========================================================== */
+const THUMB_PALETTES = [
+  ['#FF5500','#0a0a0a','#1a1a1a'],
+  ['#B23C00','#0a0a0a','#141414'],
+  ['#cc4400','#0a0a0a','#1a1a1a'],
+  ['#FF5500','#141414','#0a0a0a'],
+];
+
+function makeThumb(article, idx) {
+  const p = THUMB_PALETTES[idx % THUMB_PALETTES.length];
+  const variants = [
+    // Concentric arcs
+    `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="200" fill="${p[1]}"/>
+      <g stroke="${p[0]}" fill="none" opacity="0.85">
+        <circle cx="260" cy="170" r="20" stroke-width="1"/>
+        <circle cx="260" cy="170" r="50" stroke-width="1" opacity="0.65"/>
+        <circle cx="260" cy="170" r="90" stroke-width="1" opacity="0.45"/>
+        <circle cx="260" cy="170" r="140" stroke-width="1" opacity="0.25"/>
+        <circle cx="260" cy="170" r="200" stroke-width="1" opacity="0.12"/>
+      </g>
+      <circle cx="260" cy="170" r="4" fill="${p[0]}"/>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+    </svg>`,
+    // Line chart
+    `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="200" fill="${p[1]}"/>
+      <g stroke="#1f1f1f" stroke-width="1">
+        <line x1="0" y1="50" x2="320" y2="50"/>
+        <line x1="0" y1="100" x2="320" y2="100"/>
+        <line x1="0" y1="150" x2="320" y2="150"/>
+      </g>
+      <path d="M 10 150 L 40 140 L 70 120 L 100 130 L 130 95 L 160 110 L 190 75 L 220 80 L 250 50 L 280 60 L 310 30" stroke="${p[0]}" stroke-width="1.6" fill="none"/>
+      <path d="M 10 150 L 40 140 L 70 120 L 100 130 L 130 95 L 160 110 L 190 75 L 220 80 L 250 50 L 280 60 L 310 30 L 310 200 L 10 200 Z" fill="${p[0]}" opacity="0.08"/>
+      <circle cx="310" cy="30" r="3" fill="${p[0]}"/>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+    </svg>`,
+    // Dot grid (halftone)
+    `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="200" fill="${p[1]}"/>
+      <defs>
+        <radialGradient id="g${idx}" cx="70%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="${p[0]}" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="${p[0]}" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="320" height="200" fill="url(#g${idx})"/>
+      <g fill="${p[0]}">
+        ${Array.from({length: 16}, (_, y) => Array.from({length: 28}, (_, x) => {
+          const cx = 10 + x * 11; const cy = 12 + y * 11;
+          const d2 = Math.pow(cx-225,2) + Math.pow(cy-95,2);
+          const r = Math.max(0, 2.2 - d2/18000);
+          return r > 0.2 ? `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(2)}" opacity="${(r/2.2).toFixed(2)}"/>` : '';
+        }).join('')).join('')}
+      </g>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+    </svg>`,
+    // Typographic figure
+    `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="200" fill="${p[1]}"/>
+      <g stroke="${p[0]}" opacity="0.1" stroke-width="0.5">
+        <line x1="0" y1="40" x2="320" y2="40"/>
+        <line x1="0" y1="80" x2="320" y2="80"/>
+        <line x1="0" y1="120" x2="320" y2="120"/>
+        <line x1="0" y1="160" x2="320" y2="160"/>
+        <line x1="80" y1="0" x2="80" y2="200"/>
+        <line x1="160" y1="0" x2="160" y2="200"/>
+        <line x1="240" y1="0" x2="240" y2="200"/>
+      </g>
+      <text x="160" y="135" font-family="Fraunces,serif" font-weight="400" font-size="130" fill="${p[0]}" text-anchor="middle" letter-spacing="-5">${article.n}</text>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">${article.date}</text>
+    </svg>`,
+  ];
+  return variants[idx % variants.length];
+}
+
+function renderArticles() {
+  const container = document.getElementById('carousel-articles');
+  container.innerHTML = ARTIGOS.map((a, i) => `
+    <a class="card" href="${a.url}" target="_blank" rel="noopener">
+      <div class="thumb">${makeThumb(a, i)}</div>
+      <div class="body">
+        <div class="meta-line">
+          <span class="n">№ ${a.n}</span>
+          <span class="sep">·</span>
+          <span>${a.date}</span>
+          <span class="sep">·</span>
+          <span>${a.category}</span>
+        </div>
+        <h3 class="ttl">${a.title}</h3>
+        <p class="excerpt">${a.excerpt}</p>
+        <div class="foot">
+          <span>Por ${a.author}</span>
+          <span class="arr">↗</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+
+  setupCarousel(container, document.getElementById('art-prev'), document.getElementById('art-next'), document.getElementById('art-bar'));
+}
+
+/* ==========================================================
+   ANALYSTS CAROUSEL
+========================================================== */
+function renderAnalysts() {
+  const container = document.getElementById('carousel-analysts');
+  container.innerHTML = ANALISTAS.map((an, i) => `
+    <a class="analyst" href="${an.substackUrl}" target="_blank" rel="noopener">
+      <div class="frame">
+        <span class="tag">№ ${String(i+1).padStart(2,'0')}</span>
+        <span class="ticks"></span>
+        <span class="initials">${an.initials}</span>
+      </div>
+      <div>
+        <div class="name">${an.name}</div>
+        <div class="spec" style="margin-top:0.4rem;">${an.specialty}</div>
+      </div>
+      <div class="go">
+        <span>LinkedIn</span>
+        <span class="arr">↗</span>
+      </div>
+    </a>
+  `).join('');
+
+  setupCarousel(container, document.getElementById('an-prev'), document.getElementById('an-next'), document.getElementById('an-bar'));
+}
+
+function setupCarousel(container, prev, next, bar) {
+  function update() {
+    const max = container.scrollWidth - container.clientWidth;
+    const pct = max > 0 ? (container.scrollLeft / max) : 0;
+    const barW = Math.max(15, (container.clientWidth / container.scrollWidth) * 100);
+    bar.style.width = barW + '%';
+    bar.style.left = (pct * (100 - barW)) + '%';
+    prev.disabled = container.scrollLeft < 2;
+    next.disabled = container.scrollLeft > max - 2;
+  }
+  const step = () => container.clientWidth * 0.85;
+  prev.addEventListener('click', () => container.scrollBy({ left: -step(), behavior: 'smooth' }));
+  next.addEventListener('click', () => container.scrollBy({ left: step(), behavior: 'smooth' }));
+  container.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+}
+
+/* ==========================================================
+   PARTNERS (static wordmarks, white → orange on hover)
+========================================================== */
+function wordmark(name) {
+  // Simple editorial wordmark rendered in Fraunces
+  const esc = name.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  return `<div class="plogo" style="font-family:var(--serif); font-weight:500; font-size:1.35rem; letter-spacing:-0.015em; font-variation-settings:'opsz' 144; color:inherit; text-align:center; line-height:1;">${esc}</div>`;
+}
+function renderPartners() {
+  const grid = document.getElementById('partners-grid');
+  grid.innerHTML = PARCEIROS.map((p, i) => `
+    <a class="partner" href="${p.url}" target="_blank" rel="noopener" aria-label="${p.name}">
+      <span class="ptag">Nº ${String(i+1).padStart(2,'0')}</span>
+      ${wordmark(p.name)}
+    </a>
+  `).join('');
+}
+
+/* ==========================================================
+   GLOBE — halftone dots over orthographic projection
+========================================================== */
+const GLOBE_SIZE = 600;
+const GLOBE_R = 260;
+
+let rotation = [-30, -15, 0];
+let autoRotate = cfg.autoRotate;
+let hoverPauseUntil = 0;
+let landCache = null;
+
+async function loadWorld() {
+  const resp = await fetch('https://unpkg.com/world-atlas@2.0.2/countries-110m.json');
+  return resp.json();
+}
+
+async function setupGlobe() {
+  const svg = document.getElementById('globe-svg');
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  try {
+    const world_ = await loadWorld();
+    landCache = topojson.feature(world_, world_.objects.land);
+  } catch (err) {
+    console.warn('world-atlas fetch failed; using empty land', err);
+    landCache = { type: 'FeatureCollection', features: [] };
+  }
+
+  const projection = d3.geoOrthographic()
+    .scale(GLOBE_R)
+    .translate([GLOBE_SIZE/2, GLOBE_SIZE/2])
+    .clipAngle(90)
+    .rotate(rotation);
+
+  const path = d3.geoPath(projection);
+
+  // -------- Fast land mask via canvas equirectangular raster --------
+  const MASK_W = 720, MASK_H = 360; // 0.5°/px
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = MASK_W; maskCanvas.height = MASK_H;
+  const mctx = maskCanvas.getContext('2d');
+  const maskProj = d3.geoEquirectangular()
+    .scale(MASK_W / (2 * Math.PI))
+    .translate([MASK_W/2, MASK_H/2])
+    .precision(1);
+  const maskPath = d3.geoPath(maskProj, mctx);
+  mctx.fillStyle = '#000'; mctx.fillRect(0,0,MASK_W,MASK_H);
+  mctx.fillStyle = '#fff';
+  mctx.beginPath(); maskPath(landCache); mctx.fill();
+  const maskData = mctx.getImageData(0,0,MASK_W,MASK_H).data;
+  function isLandLonLat(lon, lat) {
+    const x = Math.floor(((lon + 180) / 360) * MASK_W) % MASK_W;
+    const y = Math.floor(((90 - lat) / 180) * MASK_H);
+    if (y < 0 || y >= MASK_H) return false;
+    return maskData[(y * MASK_W + x) * 4] > 128;
+  }
+
+  // -------- Drag rotate --------
+  let dragStart = null, dragRot = null;
+  const onDown = (x, y) => { dragStart = [x, y]; dragRot = [...rotation]; autoRotate = false; dirty = true; };
+  const onMove = (x, y) => {
+    if (!dragStart) return;
+    rotation = [dragRot[0] + (x - dragStart[0]) * 0.4,
+                Math.max(-85, Math.min(85, dragRot[1] - (y - dragStart[1]) * 0.4)), 0];
+    projection.rotate(rotation); dirty = true;
+  };
+  const onUp = () => { dragStart = null; setTimeout(() => { if (!dragStart) autoRotate = cfg.autoRotate; }, 250); };
+  svg.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', onUp);
+  svg.addEventListener('touchstart', e => { const t=e.touches[0]; onDown(t.clientX, t.clientY); }, { passive: true });
+  svg.addEventListener('touchmove',  e => { const t=e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
+  svg.addEventListener('touchend', onUp);
+
+  // -------- Build halftone dot grid once (land only) --------
+  let dotPoints = [];
+  function buildDots() {
+    const step = cfg.globeDensity;
+    dotPoints = [];
+    for (let lat = -82; lat <= 82; lat += step) {
+      for (let lon = -180; lon <= 180; lon += step) {
+        if (isLandLonLat(lon, lat)) dotPoints.push([lon, lat]);
+      }
+    }
+  }
+  buildDots();
+
+  // -------- Sort events --------
+  const sortedEvents = EVENTOS.filter(e => e.country !== 'Global').sort((a,b)=>b.date.localeCompare(a.date));
+  const latestId = sortedEvents[0] && sortedEvents[0].id;
+
+  // -------- Static scaffold (defs, sphere, glow) created ONCE --------
+  svg.innerHTML = `
+    <defs>
+      <radialGradient id="spheregrad" cx="35%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#141414"/>
+        <stop offset="70%" stop-color="#0a0a0a"/>
+        <stop offset="100%" stop-color="#050505"/>
+      </radialGradient>
+      <radialGradient id="sphereglow" cx="50%" cy="50%" r="55%">
+        <stop offset="85%" stop-color="#FF5500" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#FF5500" stop-opacity="0.12"/>
+      </radialGradient>
+    </defs>
+    <circle cx="300" cy="300" r="${GLOBE_R+8}" fill="url(#sphereglow)"/>
+    <path id="g-sphere" fill="url(#spheregrad)" stroke="#1f1f1f" stroke-width="1"/>
+    <path id="g-grat" fill="none" stroke="#1f1f1f" stroke-width="0.5" opacity="0.5"/>
+    <g id="g-dots"></g>
+    <g id="g-evts"></g>
+  `;
+  const sphereEl = svg.querySelector('#g-sphere');
+  const gratEl = svg.querySelector('#g-grat');
+  const dotsG = svg.querySelector('#g-dots');
+  const evtsG = svg.querySelector('#g-evts');
+
+  sphereEl.setAttribute('d', path({ type: 'Sphere' }));
+  gratEl.setAttribute('d', path(d3.geoGraticule10()));
+
+  // Pre-create dot nodes (reused every frame)
+  const dotNodes = [];
+  function rebuildDotNodes() {
+    dotsG.innerHTML = '';
+    dotNodes.length = 0;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < dotPoints.length; i++) {
+      const c = document.createElementNS(SVGNS, 'circle');
+      c.setAttribute('class', 'land');
+      c.setAttribute('r', '1.1');
+      frag.appendChild(c);
+      dotNodes.push(c);
+    }
+    dotsG.appendChild(frag);
+  }
+  rebuildDotNodes();
+
+  // Pre-create event nodes (stable — don't rebuild each frame)
+  const evtNodes = new Map();
+  {
+    const frag = document.createDocumentFragment();
+    sortedEvents.forEach(ev => {
+      const c = document.createElementNS(SVGNS, 'circle');
+      c.setAttribute('class', 'evt' + (ev.id === latestId ? ' pulse' : ''));
+      c.setAttribute('data-id', ev.id);
+      c.setAttribute('r', ev.id === latestId ? 5 : 4);
+      c.addEventListener('mouseenter', () => showTip(ev, c));
+      c.addEventListener('mouseleave', hideTip);
+      c.addEventListener('click', () => { window.open(ev.url, '_blank', 'noopener'); });
+      frag.appendChild(c);
+      evtNodes.set(ev.id, c);
+    });
+    evtsG.appendChild(frag);
+  }
+
+  // Tooltip (hover-only, auto-dismiss)
+  const tip = document.getElementById('tip');
+  const tipCat = tip.querySelector('#tip-cat');
+  const tipTitle = tip.querySelector('#tip-title');
+  const tipMeta = tip.querySelector('#tip-meta');
+  function showTip(ev, el) {
+    tipCat.textContent = ev.category;
+    tipTitle.textContent = ev.title;
+    tipMeta.textContent = `${ev.country} · ${ev.date}`;
+    const stage = document.getElementById('globe-stage');
+    const rect = stage.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect();
+    const cx = parseFloat(el.getAttribute('cx'));
+    const cy = parseFloat(el.getAttribute('cy'));
+    tip.style.left = ((cx / GLOBE_SIZE) * svgRect.width + (svgRect.left - rect.left)) + 'px';
+    tip.style.top  = ((cy / GLOBE_SIZE) * svgRect.height + (svgRect.top - rect.top) - 10) + 'px';
+    tip.classList.add('on');
+    hoverPauseUntil = performance.now() + 4000;
+  }
+  function hideTip() {
+    tip.classList.remove('on');
+    hoverPauseUntil = performance.now() + 400;
+  }
+  // Safety: hide tooltip if user clicks elsewhere or scrolls away
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('circle.evt') && !e.target.closest('#tip')) hideTip();
+  });
+  window.addEventListener('scroll', hideTip, { passive: true });
+
+  // -------- Animation loop (mutate attrs; rAF-throttled) --------
+  let dirty = true;
+  let last = performance.now();
+  const coords = document.getElementById('globe-coords');
+  let coordTick = 0;
+
+  function frame(t) {
+    const dt = t - last; last = t;
+    if (autoRotate && t > hoverPauseUntil && !dragStart) {
+      const secPerRev = 60 * (100 / Math.max(10, cfg.globeSpeed));
+      rotation[0] = (rotation[0] + (360 / (secPerRev * 1000)) * dt) % 360;
+      projection.rotate(rotation);
+      dirty = true;
+    }
+    if (dirty) {
+      sphereEl.setAttribute('d', path({ type: 'Sphere' }));
+      gratEl.setAttribute('d', path(d3.geoGraticule10()));
+
+      // Update dots: write cx/cy/opacity; hide back-side via display
+      const rLon = -rotation[0], rLat = -rotation[1];
+      const cosRLat = Math.cos(rLat * Math.PI/180), sinRLat = Math.sin(rLat * Math.PI/180);
+      for (let i = 0; i < dotPoints.length; i++) {
+        const node = dotNodes[i];
+        const [lon, lat] = dotPoints[i];
+        // fast visibility: dot.product of unit vectors; cos(angularDistance)
+        const dLon = (lon - rLon) * Math.PI/180;
+        const latR = lat * Math.PI/180;
+        const cosD = sinRLat * Math.sin(latR) + cosRLat * Math.cos(latR) * Math.cos(dLon);
+        if (cosD <= 0.02) { node.style.display = 'none'; continue; }
+        const p = projection([lon, lat]);
+        if (!p) { node.style.display = 'none'; continue; }
+        node.style.display = cfg.halftone ? '' : 'none';
+        node.setAttribute('cx', p[0].toFixed(1));
+        node.setAttribute('cy', p[1].toFixed(1));
+        node.setAttribute('opacity', (0.28 + cosD * 0.42).toFixed(2));
+      }
+
+      // Update events
+      for (const ev of sortedEvents) {
+        const node = evtNodes.get(ev.id);
+        const dLon = (ev.lon - rLon) * Math.PI/180;
+        const latR = ev.lat * Math.PI/180;
+        const cosD = sinRLat * Math.sin(latR) + cosRLat * Math.cos(latR) * Math.cos(dLon);
+        if (cosD <= 0.02) { node.style.display = 'none'; continue; }
+        const p = projection([ev.lon, ev.lat]);
+        if (!p) { node.style.display = 'none'; continue; }
+        node.style.display = '';
+        node.setAttribute('cx', p[0].toFixed(1));
+        node.setAttribute('cy', p[1].toFixed(1));
+      }
+
+      // Coords display — throttle to 4fps
+      if (++coordTick % 15 === 0) {
+        coords.children[0].textContent = `LAT ${(-rotation[1]).toFixed(2)}°`;
+        coords.children[1].textContent = `LON ${(-rotation[0]).toFixed(2)}°`;
+      }
+      dirty = false;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  window._globe = {
+    rebuildDots: () => { buildDots(); rebuildDotNodes(); dirty = true; },
+    setAutoRotate: (v) => { autoRotate = v; cfg.autoRotate = v; dirty = true; },
+    markDirty: () => { dirty = true; },
+  };
+}
+
+/* ==========================================================
+   KICK OFF
+========================================================== */
+loadAll().catch(err => console.error(err));
+
+/* ==========================================================
+   MARKET TICKER
+   - Binance + Alternative.me fetched directly (CORS-open, keyless).
+   - Finnhub + Brapi require server-side proxy (/api/ticker) with
+     FINNHUB_KEY / BRAPI_KEY envs in production. Here we use
+     realistic seed values with gentle drift so the bar stays lively.
+========================================================== */
+const TICKER_ORDER = [
+  { label: "BTC",           key: "BTCUSDT",  src: "binance" },
+  { label: "S&P 500",       key: "SPY",      src: "finnhub", seed: 542.10 },
+  { label: "IBOV",          key: "^BVSP",    src: "brapi",   seed: 135200, currency: "BRL-idx" },
+  { label: "ETH",           key: "ETHUSDT",  src: "binance" },
+  { label: "OURO",          key: "GLD",      src: "finnhub", seed: 231.40 },
+  { label: "PETR4",         key: "PETR4",    src: "brapi",   seed: 38.92, currency: "BRL" },
+  { label: "SOL",           key: "SOLUSDT",  src: "binance" },
+  { label: "NASDAQ",        key: "QQQ",      src: "finnhub", seed: 468.20 },
+  { label: "VALE3",         key: "VALE3",    src: "brapi",   seed: 62.15, currency: "BRL" },
+  { label: "BNB",           key: "BNBUSDT",  src: "binance" },
+  { label: "PETRÓLEO",      key: "USO",      src: "finnhub", seed: 78.60 },
+  { label: "USD/BRL",       key: "USD-BRL",  src: "brapi",   seed: 5.02, currency: "BRL-fx" },
+  { label: "XRP",           key: "XRPUSDT",  src: "binance" },
+  { label: "DOW JONES",     key: "DIA",      src: "finnhub", seed: 395.70 },
+  { label: "ITUB4",         key: "ITUB4",    src: "brapi",   seed: 34.48, currency: "BRL" },
+  { label: "ADA",           key: "ADAUSDT",  src: "binance" },
+  { label: "PRATA",         key: "SLV",      src: "finnhub", seed: 28.15 },
+  { label: "BBDC4",         key: "BBDC4",    src: "brapi",   seed: 16.30, currency: "BRL" },
+  { label: "DOGE",          key: "DOGEUSDT", src: "binance" },
+  { label: "RUSSELL 2000",  key: "IWM",      src: "finnhub", seed: 218.40 },
+  { label: "BBAS3",         key: "BBAS3",    src: "brapi",   seed: 28.74, currency: "BRL" },
+  { label: "AVAX",          key: "AVAXUSDT", src: "binance" },
+  { label: "DOT",           key: "DOTUSDT",  src: "binance" },
+  { label: "LINK",          key: "LINKUSDT", src: "binance" },
+  { label: "TON",           key: "TONUSDT",  src: "binance" },
+  { label: "NEAR",          key: "NEARUSDT", src: "binance" },
+  { label: "MATIC",         key: "MATICUSDT",src: "binance" },
+  { label: "UNI",           key: "UNIUSDT",  src: "binance" },
+  { label: "AAVE",          key: "AAVEUSDT", src: "binance" },
+  { label: "FEAR & GREED",  key: "FNG",      src: "alternative" },
+];
+
+// Seed fallback prices for Binance (used if fetch fails or pre-load)
+const BINANCE_SEED = {
+  BTCUSDT: 64500, ETHUSDT: 3180, SOLUSDT: 172, BNBUSDT: 598, XRPUSDT: 0.52,
+  ADAUSDT: 0.46, DOGEUSDT: 0.158, AVAXUSDT: 35.4, DOTUSDT: 7.12, LINKUSDT: 17.8,
+  TONUSDT: 6.85, NEARUSDT: 7.42, MATICUSDT: 0.71, UNIUSDT: 9.85, AAVEUSDT: 115.3
+};
+
+function fmtUSD(n) {
+  if (n >= 1000) return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (n >= 10)   return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 4, minimumFractionDigits: 2 });
+}
+function fmtBRL(n) {
+  return 'R$ ' + n.toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+}
+function fmtIdx(n) {
+  return n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+}
+function fmtChange(c) {
+  const sign = c >= 0 ? '+' : '';
+  return sign + c.toFixed(c > -10 && c < 10 ? 2 : 1) + '%';
+}
+function fgClass(v) {
+  if (v <= 25) return { label: 'EXTREME FEAR', cls: 'tk-fg-ef' };
+  if (v <= 45) return { label: 'FEAR',         cls: 'tk-fg-f'  };
+  if (v <= 54) return { label: 'NEUTRAL',      cls: 'tk-fg-n'  };
+  if (v <= 75) return { label: 'GREED',        cls: 'tk-fg-g'  };
+  return         { label: 'EXTREME GREED',    cls: 'tk-fg-eg' };
+}
+
+// In-memory snapshot of each ticker value
+const tickerState = Object.fromEntries(TICKER_ORDER.map(x => [x.key, { value: null, change: null, extra: null }]));
+
+function renderTickerRow() {
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+  const itemHtml = TICKER_ORDER.map(row => {
+    const st = tickerState[row.key];
+    if (st.value == null) {
+      return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-skel"></span></span>`;
+    }
+    if (row.src === 'alternative') {
+      const fg = fgClass(st.value);
+      return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-val">${st.value}</span><span class="tk-chg ${fg.cls}">${fg.label}</span></span>`;
+    }
+    let valStr;
+    if (row.currency === 'BRL')     valStr = fmtBRL(st.value);
+    else if (row.currency === 'BRL-fx')  valStr = fmtBRL(st.value);
+    else if (row.currency === 'BRL-idx') valStr = fmtIdx(st.value);
+    else valStr = fmtUSD(st.value);
+    const chg = st.change ?? 0;
+    const chgCls = chg >= 0 ? 'up' : 'down';
+    return `<span class="tk-item"><span class="tk-lbl">${row.label}</span><span class="tk-val">${valStr}</span><span class="tk-chg ${chgCls}">${fmtChange(chg)}</span></span>`;
+  }).join('');
+  // Duplicate for seamless loop
+  track.innerHTML = itemHtml + itemHtml;
+}
+
+// ---- Data fetchers ----
+async function fetchBinance() {
+  try {
+    const symbols = TICKER_ORDER.filter(x => x.src === 'binance').map(x => x.key);
+    const url = 'https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(symbols));
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('binance status ' + r.status);
+    const data = await r.json();
+    for (const d of data) {
+      if (tickerState[d.symbol]) {
+        tickerState[d.symbol].value = parseFloat(d.lastPrice);
+        tickerState[d.symbol].change = parseFloat(d.priceChangePercent);
+      }
+    }
+  } catch (err) {
+    console.warn('[ticker] binance failed, using seeds', err);
+    // Seed fallback with tiny drift
+    for (const sym of Object.keys(BINANCE_SEED)) {
+      if (tickerState[sym].value == null) {
+        tickerState[sym].value = BINANCE_SEED[sym] * (1 + (Math.random()-0.5)*0.02);
+        tickerState[sym].change = (Math.random()-0.5) * 4;
+      }
+    }
+  }
+}
+
+async function fetchFearGreed() {
+  try {
+    const r = await fetch('https://api.alternative.me/fng/?limit=1', { cache: 'no-store' });
+    if (!r.ok) throw new Error('fng status ' + r.status);
+    const j = await r.json();
+    const v = parseInt(j.data[0].value, 10);
+    tickerState.FNG.value = v;
+  } catch (err) {
+    console.warn('[ticker] fng failed', err);
+    if (tickerState.FNG.value == null) tickerState.FNG.value = 71;
+  }
+}
+
+/* Mock drift for APIs that require server proxy (Finnhub/Brapi).
+   In production these would live at /api/ticker.  */
+function seedMocks() {
+  for (const row of TICKER_ORDER) {
+    if ((row.src === 'finnhub' || row.src === 'brapi') && tickerState[row.key].value == null) {
+      tickerState[row.key].value = row.seed;
+      tickerState[row.key].change = (Math.random() - 0.4) * 1.8;
+    }
+  }
+}
+function driftMocks() {
+  for (const row of TICKER_ORDER) {
+    if (row.src === 'finnhub' || row.src === 'brapi') {
+      const st = tickerState[row.key];
+      if (st.value != null) {
+        const delta = (Math.random() - 0.5) * 0.004;
+        st.value = st.value * (1 + delta);
+        st.change = (st.change ?? 0) + delta * 100 * 0.2;
+      }
+    }
+  }
+}
+
+async function refreshTicker() {
+  await Promise.all([fetchBinance(), fetchFearGreed()]);
+  driftMocks();
+  renderTickerRow();
+}
+
+// Init
+seedMocks();
+renderTickerRow();           // skeletons + mock seeds
+refreshTicker();             // live fetch
+setInterval(refreshTicker, 120000);  // every 120s per spec
+</script>
+</body>
+</html>

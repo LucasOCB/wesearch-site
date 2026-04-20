@@ -1,0 +1,167 @@
+[
+  {
+    "id": "2026-04-15-halving-cycle-q2",
+    "title": "Halving Cycle: o que esperar do Q2 pós-metade de 2026",
+    "country": "Global",
+    "lat": 0,
+    "lon": 0,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-04-15",
+    "author": "Rafael Menezes",
+    "category": "On-Chain"
+  },
+  {
+    "id": "2026-04-12-selic-cripto-brasil",
+    "title": "Selic e cripto: a nova política monetária brasileira",
+    "country": "Brasil",
+    "lat": -15.78,
+    "lon": -47.93,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-04-12",
+    "author": "Júlia Cardoso",
+    "category": "Macro"
+  },
+  {
+    "id": "2026-04-09-etf-hong-kong",
+    "title": "ETFs de Bitcoin em Hong Kong: o contraponto asiático",
+    "country": "Hong Kong",
+    "lat": 22.30,
+    "lon": 114.17,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-04-09",
+    "author": "Henrique Sato",
+    "category": "Mercado"
+  },
+  {
+    "id": "2026-04-05-fed-fomc",
+    "title": "FOMC de abril: leitura da ata e impacto em risk assets",
+    "country": "EUA",
+    "lat": 38.89,
+    "lon": -77.03,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-04-05",
+    "author": "Rafael Menezes",
+    "category": "Macro"
+  },
+  {
+    "id": "2026-04-02-mica-europa",
+    "title": "MiCA um ano depois: o que mudou na Europa",
+    "country": "Bélgica",
+    "lat": 50.85,
+    "lon": 4.35,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-04-02",
+    "author": "Ana Beatriz Lima",
+    "category": "Geopolítica"
+  },
+  {
+    "id": "2026-03-28-ondas-em",
+    "title": "Stablecoins no Oriente Médio: o corredor Dubai-Istambul",
+    "country": "EAU",
+    "lat": 25.20,
+    "lon": 55.27,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-28",
+    "author": "Henrique Sato",
+    "category": "Geopolítica"
+  },
+  {
+    "id": "2026-03-24-argentina-dolar",
+    "title": "Argentina pós-reforma: dolarização on-chain em números",
+    "country": "Argentina",
+    "lat": -34.60,
+    "lon": -58.38,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-24",
+    "author": "Júlia Cardoso",
+    "category": "Macro"
+  },
+  {
+    "id": "2026-03-20-nigeria-p2p",
+    "title": "Nigéria: o maior mercado P2P do mundo em 2026",
+    "country": "Nigéria",
+    "lat": 9.08,
+    "lon": 8.68,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-20",
+    "author": "Ana Beatriz Lima",
+    "category": "On-Chain"
+  },
+  {
+    "id": "2026-03-15-japan-yen",
+    "title": "Iene fraco, BTC forte: carry trade reverso",
+    "country": "Japão",
+    "lat": 35.68,
+    "lon": 139.69,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-15",
+    "author": "Henrique Sato",
+    "category": "Macro"
+  },
+  {
+    "id": "2026-03-10-solana-tvl",
+    "title": "Solana: TVL dobra no Q1 — anatomia de um ciclo",
+    "country": "EUA",
+    "lat": 37.77,
+    "lon": -122.42,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-10",
+    "author": "Rafael Menezes",
+    "category": "On-Chain"
+  },
+  {
+    "id": "2026-03-05-india-wazirx",
+    "title": "Índia depois do WazirX: o novo mapa regulatório",
+    "country": "Índia",
+    "lat": 19.07,
+    "lon": 72.87,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-03-05",
+    "author": "Ana Beatriz Lima",
+    "category": "Geopolítica"
+  },
+  {
+    "id": "2026-02-28-mexico-remessas",
+    "title": "México: remessas USDT ultrapassam Western Union",
+    "country": "México",
+    "lat": 19.43,
+    "lon": -99.13,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-02-28",
+    "author": "Júlia Cardoso",
+    "category": "On-Chain"
+  },
+  {
+    "id": "2026-02-22-south-africa",
+    "title": "África do Sul e o piloto do rand digital",
+    "country": "África do Sul",
+    "lat": -26.20,
+    "lon": 28.04,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-02-22",
+    "author": "Ana Beatriz Lima",
+    "category": "Macro"
+  },
+  {
+    "id": "2026-02-18-sydney",
+    "title": "Austrália: ASIC e o enforcement de exchanges estrangeiras",
+    "country": "Austrália",
+    "lat": -33.86,
+    "lon": 151.21,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-02-18",
+    "author": "Henrique Sato",
+    "category": "Geopolítica"
+  },
+  {
+    "id": "2026-02-12-seoul-kimchi",
+    "title": "Kimchi premium volta: o que a Coreia está sinalizando",
+    "country": "Coreia do Sul",
+    "lat": 37.57,
+    "lon": 126.98,
+    "url": "https://wesearch.substack.com",
+    "date": "2026-02-12",
+    "author": "Henrique Sato",
+    "category": "Mercado"
+  }
+]
