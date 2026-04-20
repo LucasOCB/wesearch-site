@@ -65,7 +65,16 @@ def resolve_category(tags: list[str]) -> str:
 
 
 def fetch_rss(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": "WeSearch-Bot/1.0"})
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/rss+xml, application/xml, text/xml, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+        "Cache-Control": "no-cache",
+    }
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=15) as resp:
         return resp.read()
 
