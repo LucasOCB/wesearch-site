@@ -1,0 +1,35 @@
+name: Atualizar Artigos
+
+on:
+  schedule:
+    # Quarta, sexta e domingo às 10h BRT (13h UTC)
+    - cron: "0 13 * * 3"  # quarta
+    - cron: "0 13 * * 5"  # sexta
+    - cron: "0 13 * * 0"  # domingo
+  workflow_dispatch:       # permite rodar manualmente
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Buscar artigos do Substack
+        run: python scripts/fetch_artigos.py
+
+      - name: Commit e push se houver mudanças
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/artigos.json
+          git diff --cached --quiet || git commit -m "chore: atualiza artigos do Substack [bot]"
+          git push
