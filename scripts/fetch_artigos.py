@@ -2,17 +2,17 @@
 """
 Busca os últimos artigos do Substack da WeSearch e atualiza data/artigos.json.
 Roda via GitHub Actions toda quarta, sexta e domingo.
+
+Usa a API JSON do Substack diretamente — evita o bloqueio do RSS por IP.
 """
 
 import json
 import re
 import urllib.request
-import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-SUBSTACK_RSS = "https://wesearch.substack.com/feed"
+SUBSTACK_API = "https://wesearch.substack.com/api/v1/posts?limit=10"
 OUTPUT_FILE = Path(__file__).parent.parent / "data" / "artigos.json"
 MAX_ARTIGOS = 10
 
@@ -21,7 +21,6 @@ MONTHS_PT = {
     7: "JUL", 8: "AGO", 9: "SET", 10: "OUT", 11: "NOV", 12: "DEZ",
 }
 
-# Mapeamento de tags do Substack para categorias do site
 CATEGORY_MAP = {
     "on-chain": "ON-CHAIN",
     "onchain": "ON-CHAIN",
@@ -47,61 +46,59 @@ def truncate(text: str, max_len: int = 120) -> str:
     return cut.rstrip(".,;:") + "."
 
 
-def format_date_pt(pub_date_str: str) -> str:
+def format_date_pt(iso_str: str) -> str:
     try:
-        dt = parsedate_to_datetime(pub_date_str)
-        dt = dt.astimezone(timezone.utc)
+        # Substack retorna ISO 8601: "2026-04-18T12:00:00.000Z"
+        iso_str = iso_str[:19].replace("T", " ")
+        dt = datetime.strptime(iso_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     except Exception:
         dt = datetime.now(timezone.utc)
     return f"{dt.day:02d} {MONTHS_PT[dt.month]} {dt.year}"
 
 
-def resolve_category(tags: list[str]) -> str:
-    for tag in tags:
-        normalized = tag.lower().strip()
-        if normalized in CATEGORY_MAP:
-            return CATEGORY_MAP[normalized]
+def resolve_category(post_tags: list) -> str:
+    for tag in post_tags:
+        name = (tag.get("name") or tag.get("slug") or "").lower().strip()
+        if name in CATEGORY_MAP:
+            return CATEGORY_MAP[name]
     return "RESEARCH"
 
 
-def fetch_rss(url: str) -> bytes:
+def fetch_posts() -> list[dict]:
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         ),
-        "Accept": "application/rss+xml, application/xml, text/xml, */*",
+        "Accept": "application/json",
         "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
-        "Cache-Control": "no-cache",
     }
-    req = urllib.request.Request(url, headers=headers)
+    req = urllib.request.Request(SUBSTACK_API, headers=headers)
     with urllib.request.urlopen(req, timeout=15) as resp:
-        return resp.read()
+        return json.loads(resp.read())
 
 
-def parse_items(xml_bytes: bytes) -> list[dict]:
-    root = ET.fromstring(xml_bytes)
-    ns = {"dc": "http://purl.org/dc/elements/1.1/"}
-    channel = root.find("channel")
-    items = channel.findall("item") if channel is not None else []
-
+def parse_posts(posts: list) -> list[dict]:
     artigos = []
-    for i, item in enumerate(items[:MAX_ARTIGOS], start=1):
-        title = (item.findtext("title") or "").strip()
-        link = (item.findtext("link") or "").strip()
-        pub_date = (item.findtext("pubDate") or "").strip()
-        description = strip_html(item.findtext("description") or "")
-        excerpt = truncate(description)
+    for i, post in enumerate(posts[:MAX_ARTIGOS], start=1):
+        title = (post.get("title") or "").strip()
+        slug = post.get("slug") or ""
+        url = f"https://wesearch.substack.com/p/{slug}"
+        pub_date = post.get("post_date") or post.get("publishedAt") or ""
+        subtitle = strip_html(post.get("subtitle") or post.get("description") or "")
+        excerpt = truncate(subtitle) if subtitle else truncate(strip_html(post.get("body_html") or ""))
 
-        # Autor: dc:creator ou <author>
-        author = (
-            item.findtext("dc:creator", namespaces=ns)
-            or item.findtext("author")
-            or ""
-        ).strip().upper()
+        # Autor
+        author_obj = post.get("publishedBylines") or post.get("author") or []
+        if isinstance(author_obj, list) and author_obj:
+            author = (author_obj[0].get("name") or "").upper()
+        elif isinstance(author_obj, dict):
+            author = (author_obj.get("name") or "").upper()
+        else:
+            author = ""
 
-        # Categorias/tags
-        tags = [c.text or "" for c in item.findall("category")]
+        # Categoria via tags
+        tags = post.get("postTags") or post.get("tags") or []
         category = resolve_category(tags)
 
         artigos.append({
@@ -111,16 +108,18 @@ def parse_items(xml_bytes: bytes) -> list[dict]:
             "excerpt": excerpt,
             "author": author,
             "category": category,
-            "url": link,
+            "url": url,
         })
 
     return artigos
 
 
 def main():
-    print(f"Buscando RSS: {SUBSTACK_RSS}")
-    xml_bytes = fetch_rss(SUBSTACK_RSS)
-    artigos = parse_items(xml_bytes)
+    print(f"Buscando posts: {SUBSTACK_API}")
+    posts = fetch_posts()
+    print(f"{len(posts)} posts recebidos da API")
+
+    artigos = parse_posts(posts)
 
     if not artigos:
         print("Nenhum artigo encontrado. Abortando.")
