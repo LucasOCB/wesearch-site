@@ -643,8 +643,9 @@ section.tight { padding: 0; }
 }
 .card:hover .thumb { filter: grayscale(0) contrast(1); }
 
-/* Abstract editorial thumb (no external images — SVG-generated placeholders) */
+/* Abstract editorial thumb (SVG placeholders or real cover images) */
 .thumb svg { width: 100%; height: 100%; display: block; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .card .body { padding: 1.25rem 1.25rem 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 0.9rem; }
 .card .meta-line {
@@ -1257,7 +1258,8 @@ async function fetchArtigosSubstack() {
       const author = (item.author || '').replace(/\s*-.*$/, '').trim().toUpperCase();
       return {
         n: String(i+1).padStart(2,'0'), date, title: item.title,
-        excerpt, author, category, url: item.link
+        excerpt, author, category, url: item.link,
+        thumbnail: item.thumbnail || null
       };
     });
   } catch {
@@ -1311,6 +1313,9 @@ const THUMB_PALETTES = [
 ];
 
 function makeThumb(article, idx) {
+  if (article.thumbnail) {
+    return `<img src="${esc(article.thumbnail)}" alt="" loading="lazy">`;
+  }
   const p = THUMB_PALETTES[idx % THUMB_PALETTES.length];
   const variants = [
     // Concentric arcs
@@ -2041,32 +2046,9 @@ function geoFromText(text) {
   return null;
 }
 
+const WORKER_URL = 'https://wesearch-news.wesearch.workers.dev';
+
 async function fetchGlobeNews() {
-  const GUARDIAN_KEY = 'test';
-  const REDDIT_SUBS = [
-    { sub: 'worldnews',    name: 'Reddit/worldnews' },
-    { sub: 'geopolitics',  name: 'Reddit/geopolitics' },
-    { sub: 'europe',       name: 'Reddit/europe' },
-    { sub: 'MiddleEast',   name: 'Reddit/MiddleEast' },
-    { sub: 'LatinAmerica', name: 'Reddit/LatinAmerica' },
-    { sub: 'africa',       name: 'Reddit/africa' },
-    { sub: 'china',        name: 'Reddit/china' },
-    { sub: 'japan',        name: 'Reddit/japan' },
-    { sub: 'russia',       name: 'Reddit/russia' },
-  ];
-
-  async function fetchReddit(sub, name) {
-    const data = await fetch(
-      `https://www.reddit.com/r/${sub}/top.json?limit=30&t=day`,
-      { headers: { 'Accept': 'application/json' } }
-    ).then(r => r.json());
-    return (data?.data?.children || []).map(c => ({
-      title: c.data.title,
-      link:  c.data.url,
-      source: name,
-    })).filter(x => x.title && !x.title.startsWith('['));
-  }
-
   const results = [];
   const seen    = new Set();
 
@@ -2076,7 +2058,6 @@ async function fetchGlobeNews() {
     const dedup = title.toLowerCase().slice(0, 50);
     if (seen.has(dedup)) return;
     seen.add(dedup);
-    // Jitter ±2.5° para markers do mesmo país não se sobreponham
     const jLat = geo.lat + (Math.random() - 0.5) * 5;
     const jLon = geo.lon + (Math.random() - 0.5) * 5;
     results.push({
@@ -2084,8 +2065,8 @@ async function fetchGlobeNews() {
       title: title.length > 90 ? title.slice(0, 87) + '…' : title,
       country: geo.country,
       tag: geo.tag,
-      baseLat: geo.lat, baseLon: geo.lon,           // coords canónicas para geo-tag
-      lat: Math.max(-85, Math.min(85, jLat)),        // coords com jitter para display
+      baseLat: geo.lat, baseLon: geo.lon,
+      lat: Math.max(-85, Math.min(85, jLat)),
       lon: ((jLon + 180) % 360) - 180,
       date: new Date().toISOString().slice(0, 10),
       author: source,
@@ -2093,33 +2074,20 @@ async function fetchGlobeNews() {
     });
   }
 
-  // Guardian API
   try {
-    const gData = await fetch(
-      `https://content.guardianapis.com/search?api-key=${GUARDIAN_KEY}&page-size=30&order-by=newest`
-    ).then(r => r.json());
-    for (const item of (gData.response?.results || [])) {
-      addArticle('g-' + item.id.replace(/\//g, '-'), item.webTitle, item.webUrl, 'The Guardian');
+    const data = await fetch(WORKER_URL).then(r => r.json());
+    for (const item of (data.articles || [])) {
+      const id = item.source.replace(/\W/g, '') + '-' + item.title.slice(0, 20).replace(/\W/g, '');
+      addArticle(id, item.title, item.url, item.source);
     }
-  } catch(e) { console.warn('[globe] guardian failed', e); }
-
-  // Reddit — CORS nativo, sem proxy, sem chave
-  await Promise.allSettled(REDDIT_SUBS.map(async ({ sub, name }) => {
-    try {
-      const items = await fetchReddit(sub, name);
-      for (const item of items) {
-        const id = 'rd-' + sub + '-' + item.title.slice(0, 20).replace(/\W/g, '');
-        addArticle(id, item.title, item.link, item.source);
-      }
-    } catch(e) { console.warn(`[globe] reddit ${sub} failed`, e); }
-  }));
+  } catch(e) { console.warn('[globe] worker indisponível', e); }
 
   if (results.length === 0) return; // keep static markers as fallback
 
   // Geo-tag por posição: d3.geoContains diz qual país contém as coords base
   if (window._globe?.geoTagArticles) window._globe.geoTagArticles(results);
 
-  EVENTOS = results.slice(0, 28);
+  EVENTOS = results;
 
   // Update stats
   const gsEl = document.getElementById('gs-events');
