@@ -1960,58 +1960,129 @@ async function setupGlobe() {
    GLOBE NEWS — geo dictionary + live fetch
 ========================================================== */
 const GEO_DICT = {
-  // Americas
+  // Americas — países
   'brazil': [-15.78, -47.93], 'brasil': [-15.78, -47.93], 'brasília': [-15.78, -47.93],
+  'são paulo': [-23.55, -46.63], 'rio de janeiro': [-22.91, -43.17], 'lula': [-15.78, -47.93],
   'united states': [38.90, -77.03], 'trump': [38.90, -77.03], 'washington': [38.90, -77.03],
-  'argentina': [-34.61, -58.37], 'buenos aires': [-34.61, -58.37],
-  'mexico': [19.43, -99.13], 'méxico': [19.43, -99.13],
-  'canada': [45.42, -75.69], 'ottawa': [45.42, -75.69],
-  'colombia': [4.71, -74.07], 'venezuela': [10.49, -66.88],
-  'chile': [-33.45, -70.67], 'peru': [-12.04, -77.03],
-  // Europe
+  'wall street': [40.71, -74.01], 'new york': [40.71, -74.01], 'federal reserve': [38.90, -77.03],
+  'white house': [38.90, -77.03], 'pentagon': [38.90, -77.03], 'harris': [38.90, -77.03],
+  'american': [38.90, -77.03], 'u.s.': [38.90, -77.03], 'us economy': [38.90, -77.03],
+  'argentina': [-34.61, -58.37], 'buenos aires': [-34.61, -58.37], 'milei': [-34.61, -58.37],
+  'mexico': [19.43, -99.13], 'méxico': [19.43, -99.13], 'sheinbaum': [19.43, -99.13],
+  'canada': [45.42, -75.69], 'ottawa': [45.42, -75.69], 'carney': [45.42, -75.69], 'trudeau': [45.42, -75.69],
+  'colombia': [4.71, -74.07], 'bogotá': [4.71, -74.07],
+  'venezuela': [10.49, -66.88], 'caracas': [10.49, -66.88], 'maduro': [10.49, -66.88],
+  'chile': [-33.45, -70.67], 'santiago': [-33.45, -70.67],
+  'peru': [-12.04, -77.03], 'lima': [-12.04, -77.03],
+  'ecuador': [-0.23, -78.52], 'bolivia': [-16.50, -68.15], 'uruguay': [-34.90, -56.19],
+  'cuba': [23.13, -82.38], 'havana': [23.13, -82.38],
+  // Europe — países e líderes
   'united kingdom': [51.51, -0.13], 'britain': [51.51, -0.13], 'london': [51.51, -0.13],
-  'germany': [52.52, 13.40], 'berlin': [52.52, 13.40],
-  'france': [48.85, 2.35], 'paris': [48.85, 2.35],
-  'russia': [55.75, 37.62], 'moscow': [55.75, 37.62], 'putin': [55.75, 37.62],
+  'uk ': [51.51, -0.13], 'starmer': [51.51, -0.13], 'downing street': [51.51, -0.13],
+  'bank of england': [51.51, -0.13], 'british': [51.51, -0.13],
+  'germany': [52.52, 13.40], 'berlin': [52.52, 13.40], 'scholz': [52.52, 13.40],
+  'merz': [52.52, 13.40], 'bundesbank': [52.52, 13.40], 'german': [52.52, 13.40],
+  'france': [48.85, 2.35], 'paris': [48.85, 2.35], 'macron': [48.85, 2.35], 'french': [48.85, 2.35],
+  'russia': [55.75, 37.62], 'moscow': [55.75, 37.62], 'putin': [55.75, 37.62], 'kremlin': [55.75, 37.62],
   'ukraine': [50.45, 30.52], 'kyiv': [50.45, 30.52], 'zelensky': [50.45, 30.52],
-  'spain': [40.42, -3.70], 'italy': [41.90, 12.49], 'rome': [41.90, 12.49],
-  'netherlands': [52.37, 4.90], 'poland': [52.23, 21.01],
-  'switzerland': [46.95, 7.44], 'sweden': [59.33, 18.07],
+  'spain': [40.42, -3.70], 'madrid': [40.42, -3.70], 'sanchez': [40.42, -3.70],
+  'italy': [41.90, 12.49], 'rome': [41.90, 12.49], 'meloni': [41.90, 12.49], 'italian': [41.90, 12.49],
+  'netherlands': [52.37, 4.90], 'amsterdam': [52.37, 4.90],
+  'poland': [52.23, 21.01], 'warsaw': [52.23, 21.01],
+  'switzerland': [46.95, 7.44], 'zurich': [47.38, 8.54], 'davos': [46.80, 9.84],
+  'sweden': [59.33, 18.07], 'stockholm': [59.33, 18.07],
+  'norway': [59.91, 10.75], 'oslo': [59.91, 10.75],
+  'denmark': [55.68, 12.57], 'finland': [60.17, 24.94], 'austria': [48.21, 16.37],
   'portugal': [38.72, -9.14], 'lisbon': [38.72, -9.14],
-  'greece': [37.98, 23.73], 'turkey': [39.93, 32.86], 'erdogan': [39.93, 32.86],
+  'greece': [37.98, 23.73], 'athens': [37.98, 23.73],
+  'turkey': [39.93, 32.86], 'erdogan': [39.93, 32.86], 'ankara': [39.93, 32.86],
+  'european union': [50.85, 4.35], 'brussels': [50.85, 4.35], 'ecb': [50.11, 8.68],
+  'nato': [50.85, 4.35], 'hungary': [47.50, 19.04], 'orbán': [47.50, 19.04],
+  'romania': [44.43, 26.10], 'czech': [50.08, 14.44], 'serbia': [44.80, 20.46],
   // Middle East
-  'israel': [31.77, 35.22], 'tel aviv': [32.08, 34.78], 'netanyahu': [31.77, 35.22],
-  'iran': [35.69, 51.39], 'tehran': [35.69, 51.39],
-  'saudi arabia': [24.69, 46.72], 'riyadh': [24.69, 46.72],
+  'israel': [31.77, 35.22], 'tel aviv': [32.08, 34.78], 'netanyahu': [31.77, 35.22], 'israeli': [31.77, 35.22],
+  'iran': [35.69, 51.39], 'tehran': [35.69, 51.39], 'iranian': [35.69, 51.39],
+  'saudi arabia': [24.69, 46.72], 'riyadh': [24.69, 46.72], 'mbs': [24.69, 46.72],
   'iraq': [33.34, 44.40], 'baghdad': [33.34, 44.40],
-  'syria': [33.51, 36.29], 'lebanon': [33.89, 35.50],
-  'yemen': [15.55, 44.21], 'gaza': [31.52, 34.45],
-  'uae': [24.45, 54.37], 'dubai': [25.20, 55.27],
-  'qatar': [25.29, 51.53], 'kuwait': [29.37, 47.98],
-  // Asia
+  'syria': [33.51, 36.29], 'damascus': [33.51, 36.29],
+  'lebanon': [33.89, 35.50], 'beirut': [33.89, 35.50], 'hezbollah': [33.89, 35.50],
+  'yemen': [15.55, 44.21], 'houthi': [15.55, 44.21],
+  'gaza': [31.52, 34.45], 'west bank': [31.90, 35.20], 'hamas': [31.52, 34.45],
+  'uae': [24.45, 54.37], 'dubai': [25.20, 55.27], 'abu dhabi': [24.45, 54.37],
+  'qatar': [25.29, 51.53], 'doha': [25.29, 51.53],
+  'kuwait': [29.37, 47.98], 'jordan': [31.95, 35.93], 'amman': [31.95, 35.93],
+  'oman': [23.61, 58.59], 'bahrain': [26.22, 50.59],
+  // Asia — países, líderes e cidades
   'china': [39.91, 116.39], 'beijing': [39.91, 116.39], 'xi jinping': [39.91, 116.39],
-  'japan': [35.68, 139.69], 'tokyo': [35.68, 139.69],
+  'shanghai': [31.23, 121.47], 'chinese': [39.91, 116.39],
+  'japan': [35.68, 139.69], 'tokyo': [35.68, 139.69], 'ishiba': [35.68, 139.69], 'japanese': [35.68, 139.69],
   'india': [28.61, 77.21], 'new delhi': [28.61, 77.21], 'modi': [28.61, 77.21],
-  'south korea': [37.57, 126.98], 'seoul': [37.57, 126.98],
-  'north korea': [39.02, 125.76], 'kim jong': [39.02, 125.76],
-  'taiwan': [25.04, 121.56], 'hong kong': [22.30, 114.17],
-  'singapore': [1.35, 103.82], 'indonesia': [-6.21, 106.85],
-  'pakistan': [33.72, 73.04], 'afghanistan': [34.52, 69.18],
-  'vietnam': [21.03, 105.85], 'thailand': [13.76, 100.50],
-  'malaysia': [3.15, 101.69], 'philippines': [14.60, 120.98],
+  'mumbai': [19.08, 72.88], 'indian': [28.61, 77.21],
+  'south korea': [37.57, 126.98], 'seoul': [37.57, 126.98], 'korean': [37.57, 126.98],
+  'north korea': [39.02, 125.76], 'kim jong': [39.02, 125.76], 'pyongyang': [39.02, 125.76],
+  'taiwan': [25.04, 121.56], 'taipei': [25.04, 121.56],
+  'hong kong': [22.30, 114.17],
+  'singapore': [1.35, 103.82],
+  'indonesia': [-6.21, 106.85], 'jakarta': [-6.21, 106.85],
+  'pakistan': [33.72, 73.04], 'islamabad': [33.72, 73.04], 'karachi': [24.86, 67.01],
+  'afghanistan': [34.52, 69.18], 'kabul': [34.52, 69.18], 'taliban': [34.52, 69.18],
+  'bangladesh': [23.72, 90.41], 'sri lanka': [6.93, 79.84],
+  'vietnam': [21.03, 105.85], 'hanoi': [21.03, 105.85],
+  'thailand': [13.76, 100.50], 'bangkok': [13.76, 100.50],
+  'malaysia': [3.15, 101.69], 'kuala lumpur': [3.15, 101.69],
+  'philippines': [14.60, 120.98], 'manila': [14.60, 120.98],
+  'myanmar': [19.74, 96.08], 'cambodia': [11.57, 104.92],
+  'kazakhstan': [51.18, 71.45], 'uzbekistan': [41.30, 69.24],
   // Africa
-  'south africa': [-25.75, 28.19], 'nigeria': [9.07, 7.40],
-  'egypt': [30.06, 31.25], 'cairo': [30.06, 31.25],
-  'ethiopia': [9.03, 38.74], 'kenya': [-1.29, 36.82],
-  'morocco': [34.01, -6.85], 'ghana': [5.55, -0.20],
-  'sudan': [15.55, 32.53], 'congo': [-4.32, 15.32],
+  'south africa': [-25.75, 28.19], 'johannesburg': [-26.20, 28.04], 'pretoria': [-25.75, 28.19],
+  'nigeria': [9.07, 7.40], 'lagos': [6.46, 3.40], 'abuja': [9.07, 7.40],
+  'egypt': [30.06, 31.25], 'cairo': [30.06, 31.25], 'sisi': [30.06, 31.25],
+  'ethiopia': [9.03, 38.74], 'addis ababa': [9.03, 38.74],
+  'kenya': [-1.29, 36.82], 'nairobi': [-1.29, 36.82],
+  'morocco': [34.01, -6.85], 'rabat': [34.01, -6.85], 'casablanca': [33.59, -7.62],
+  'ghana': [5.55, -0.20], 'accra': [5.55, -0.20],
+  'sudan': [15.55, 32.53], 'khartoum': [15.55, 32.53],
+  'congo': [-4.32, 15.32], 'kinshasa': [-4.32, 15.32],
+  'tanzania': [-6.79, 39.21], 'uganda': [0.32, 32.58],
+  'angola': [-8.84, 13.23], 'mozambique': [-25.97, 32.57],
+  'somalia': [2.05, 45.34], 'mali': [12.65, -8.00], 'niger': [13.51, 2.12],
+  'libya': [32.90, 13.18], 'tripoli': [32.90, 13.18], 'tunisia': [36.82, 10.17],
+  'algeria': [36.74, 3.06], 'senegal': [14.71, -17.47],
   // Oceania
-  'australia': [-35.28, 149.13], 'sydney': [-33.87, 151.21],
-  'new zealand': [-41.29, 174.78],
+  'australia': [-35.28, 149.13], 'sydney': [-33.87, 151.21], 'canberra': [-35.28, 149.13],
+  'melbourne': [-37.81, 144.96], 'australian': [-35.28, 149.13],
+  'new zealand': [-41.29, 174.78], 'wellington': [-41.29, 174.78],
+  // Crypto / Macro — termos com âncora geográfica
+  'bitcoin': [37.57, 126.98], 'crypto': [1.35, 103.82], 'ethereum': [37.57, 126.98],
+  'imf': [38.90, -77.03], 'world bank': [38.90, -77.03], 'g7': [51.51, -0.13],
+  'g20': [-15.78, -47.93], 'brics': [-15.78, -47.93], 'opec': [24.69, 46.72],
+  'fed ': [38.90, -77.03], 'tariff': [38.90, -77.03], 'sanctions': [38.90, -77.03],
 };
 
 // Sort longest-first to avoid 'iran' matching inside 'ukraine'
 const GEO_ENTRIES = Object.entries(GEO_DICT).sort((a, b) => b[0].length - a[0].length);
+
+// ISO 3166-1 alpha-2 → [lat, lon]
+const ISO_COORDS = {
+  'US':[38.90,-77.03],'GB':[51.51,-0.13],'FR':[48.85,2.35],'DE':[52.52,13.40],
+  'BR':[-15.78,-47.93],'JP':[35.68,139.69],'IN':[28.61,77.21],'AU':[-35.28,149.13],
+  'CA':[45.42,-75.69],'RU':[55.75,37.62],'CN':[39.91,116.39],'ZA':[-25.75,28.19],
+  'NG':[9.07,7.40],'EG':[30.06,31.25],'MX':[19.43,-99.13],'AR':[-34.61,-58.37],
+  'KR':[37.57,126.98],'ID':[-6.21,106.85],'SA':[24.69,46.72],'TR':[39.93,32.86],
+  'IL':[31.77,35.22],'UA':[50.45,30.52],'PL':[52.23,21.01],'NL':[52.37,4.90],
+  'ES':[40.42,-3.70],'IT':[41.90,12.49],'PT':[38.72,-9.14],'SE':[59.33,18.07],
+  'NO':[59.91,10.75],'CH':[46.95,7.44],'EU':[50.85,4.35],'BE':[50.85,4.35],
+  'PK':[33.72,73.04],'AF':[34.52,69.18],'IQ':[33.34,44.40],'IR':[35.69,51.39],
+  'SY':[33.51,36.29],'LB':[33.89,35.50],'YE':[15.55,44.21],'QA':[25.29,51.53],
+  'AE':[24.45,54.37],'KE':[-1.29,36.82],'ET':[9.03,38.74],'MA':[34.01,-6.85],
+  'GH':[5.55,-0.20],'SD':[15.55,32.53],'TW':[25.04,121.56],'HK':[22.30,114.17],
+  'SG':[1.35,103.82],'MY':[3.15,101.69],'PH':[14.60,120.98],'VN':[21.03,105.85],
+  'TH':[13.76,100.50],'NZ':[-41.29,174.78],'CL':[-33.45,-70.67],'CO':[4.71,-74.07],
+  'PE':[-12.04,-77.03],'VE':[10.49,-66.88],'GR':[37.98,23.73],'HU':[47.50,19.04],
+  'RO':[44.43,26.10],'CZ':[50.08,14.44],'AT':[48.21,16.37],'DK':[55.68,12.57],
+  'FI':[60.17,24.94],'JO':[31.95,35.93],'KW':[29.37,47.98],'LY':[32.90,13.18],
+  'DZ':[36.74,3.06],'TN':[36.82,10.17],'KZ':[51.18,71.45],'BD':[23.72,90.41],
+};
 
 // Aliases → canonical tag (para que trump/washington/paris batam no país certo)
 const TAG_CANONICAL = {
@@ -2052,20 +2123,31 @@ async function fetchGlobeNews() {
   const results = [];
   const seen    = new Set();
 
-  function addArticle(id, title, url, source) {
-    const geo = geoFromText(title);
-    if (!geo) return;
+  function addArticle(id, title, url, source, countryCode) {
     const dedup = title.toLowerCase().slice(0, 50);
     if (seen.has(dedup)) return;
+
+    // 1. ISO directo do metadata da API
+    let lat, lon, tag, country;
+    if (countryCode && ISO_COORDS[countryCode]) {
+      [lat, lon] = ISO_COORDS[countryCode];
+      tag = countryCode.toLowerCase();
+      country = countryCode;
+    } else {
+      // 2. Fallback: keyword matching no título
+      const geo = geoFromText(title);
+      if (!geo) return;
+      ({ lat, lon, tag, country } = geo);
+    }
+
     seen.add(dedup);
-    const jLat = geo.lat + (Math.random() - 0.5) * 5;
-    const jLon = geo.lon + (Math.random() - 0.5) * 5;
+    const jLat = lat + (Math.random() - 0.5) * 5;
+    const jLon = lon + (Math.random() - 0.5) * 5;
     results.push({
       id, url, source,
       title: title.length > 90 ? title.slice(0, 87) + '…' : title,
-      country: geo.country,
-      tag: geo.tag,
-      baseLat: geo.lat, baseLon: geo.lon,
+      country, tag,
+      baseLat: lat, baseLon: lon,
       lat: Math.max(-85, Math.min(85, jLat)),
       lon: ((jLon + 180) % 360) - 180,
       date: new Date().toISOString().slice(0, 10),
@@ -2076,10 +2158,12 @@ async function fetchGlobeNews() {
 
   try {
     const data = await fetch(WORKER_URL).then(r => r.json());
-    for (const item of (data.articles || [])) {
+    const articles = data.articles || [];
+    for (const item of articles) {
       const id = item.source.replace(/\W/g, '') + '-' + item.title.slice(0, 20).replace(/\W/g, '');
-      addArticle(id, item.title, item.url, item.source);
+      addArticle(id, item.title, item.url, item.source, item.countryCode);
     }
+    console.info(`[globe] recebidos: ${articles.length} | no globo: ${results.length}`);
   } catch(e) { console.warn('[globe] worker indisponível', e); }
 
   if (results.length === 0) return; // keep static markers as fallback
