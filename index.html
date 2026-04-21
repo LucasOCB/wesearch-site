@@ -436,6 +436,9 @@ section.tight { padding: 0; }
 }
 .gf-btn:hover { border-color: var(--border-strong); color: var(--fg); }
 .gf-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,85,0,0.07); }
+.gf-btn.inactive { opacity: 0.35; }
+.gf-sources { max-height: 8rem; overflow-y: auto; gap: 0.3rem; }
+.gf-sources .gf-btn { font-size: 0.60rem; padding: 0.2rem 0.55rem; }
 
 .globe-stage {
   position: relative;
@@ -1106,6 +1109,10 @@ footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }
               <button class="gf-btn" data-val="macro">Macroeconomia</button>
               <button class="gf-btn" data-val="cripto">Cripto</button>
             </div>
+          </div>
+          <div class="gf-group" id="filter-source-group" style="display:none">
+            <span class="gf-label mono">FONTE</span>
+            <div class="gf-btns gf-sources" id="filter-source"></div>
           </div>
         </div>
       </div>
@@ -2225,24 +2232,51 @@ function classifyTitle(title, sourceCategory) {
 }
 
 // Estado dos filtros activos
-let _filterTime = 'all';
-let _filterCat  = 'all';
-let _allEventos = []; // todos os eventos sem filtro
+let _filterTime    = 'all';
+let _filterCat     = 'all';
+let _filterSources = new Set(); // vazio = todas activas
+let _allEventos    = [];
 
 function applyFilters() {
   const now   = Date.now();
   const limit = _filterTime === '24h' ? 86400000 : _filterTime === '7d' ? 604800000 : Infinity;
   EVENTOS = _allEventos.filter(ev => {
     if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
+    if (_filterSources.size > 0 && !_filterSources.has(ev.source)) return false;
     if (limit < Infinity && ev.publishedAt) {
-      const age = now - new Date(ev.publishedAt).getTime();
-      if (age > limit) return false;
+      if (now - new Date(ev.publishedAt).getTime() > limit) return false;
     }
     return true;
   });
   if (window._globe?.rebuildMarkers) window._globe.rebuildMarkers(EVENTOS);
   const gsEl = document.getElementById('gs-events');
   if (gsEl) gsEl.textContent = String(EVENTOS.length).padStart(2,'0');
+}
+
+function rebuildSourceButtons() {
+  const container = document.getElementById('filter-source');
+  const group     = document.getElementById('filter-source-group');
+  if (!container || !group) return;
+
+  // Fontes presentes após filtros de tempo+categoria (ignora filtro de fonte)
+  const now   = Date.now();
+  const limit = _filterTime === '24h' ? 86400000 : _filterTime === '7d' ? 604800000 : Infinity;
+  const visible = _allEventos.filter(ev => {
+    if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
+    if (limit < Infinity && ev.publishedAt) {
+      if (now - new Date(ev.publishedAt).getTime() > limit) return false;
+    }
+    return true;
+  });
+
+  const sources = [...new Set(visible.map(ev => ev.source))].sort();
+  if (sources.length === 0) { group.style.display = 'none'; return; }
+  group.style.display = '';
+
+  container.innerHTML = sources.map(s => {
+    const active = _filterSources.size === 0 || _filterSources.has(s);
+    return `<button class="gf-btn ${active ? '' : 'inactive'}" data-source="${s}">${s}</button>`;
+  }).join('');
 }
 
 function setupGlobeFilters() {
@@ -2252,14 +2286,46 @@ function setupGlobeFilters() {
     document.querySelectorAll('#filter-time .gf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _filterTime = btn.dataset.val;
+    _filterSources.clear();
+    rebuildSourceButtons();
     applyFilters();
   });
+
   document.getElementById('filter-cat')?.addEventListener('click', e => {
     const btn = e.target.closest('.gf-btn');
     if (!btn) return;
     document.querySelectorAll('#filter-cat .gf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _filterCat = btn.dataset.val;
+    _filterSources.clear();
+    rebuildSourceButtons();
+    applyFilters();
+  });
+
+  document.getElementById('filter-source')?.addEventListener('click', e => {
+    const btn = e.target.closest('.gf-btn');
+    if (!btn) return;
+    const src = btn.dataset.source;
+
+    // Primeiro clique numa fonte: activa só essa (desactiva todas as outras)
+    // Clique numa já activa (e é a única): volta a activar todas
+    if (_filterSources.size === 0) {
+      // todas activas → activa só esta
+      const all = [...document.querySelectorAll('#filter-source .gf-btn')].map(b => b.dataset.source);
+      all.forEach(s => _filterSources.add(s));
+      _filterSources.delete(src);
+    } else if (_filterSources.has(src)) {
+      _filterSources.delete(src);
+      if (_filterSources.size === 0) _filterSources.clear(); // todas activas de novo
+    } else {
+      _filterSources.add(src);
+    }
+
+    // Se todas activas, limpa o set
+    const total = document.querySelectorAll('#filter-source .gf-btn').length;
+    if (_filterSources.size >= total) _filterSources.clear();
+
+    rebuildSourceButtons();
     applyFilters();
   });
 }
@@ -2313,6 +2379,7 @@ async function fetchGlobeNews() {
   if (window._globe?.geoTagArticles) window._globe.geoTagArticles(results);
 
   _allEventos = results;
+  rebuildSourceButtons();
   applyFilters();
 
   // Update stats
