@@ -2275,7 +2275,7 @@ function rebuildSourceButtons() {
 
   container.innerHTML = sources.map(s => {
     const active = _filterSources.size === 0 || _filterSources.has(s);
-    return `<button class="gf-btn ${active ? '' : 'inactive'}" data-source="${s}">${s}</button>`;
+    return `<button class="gf-btn ${active ? 'active' : 'inactive'}" data-source="${s}">${s}</button>`;
   }).join('');
 }
 
