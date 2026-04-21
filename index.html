@@ -424,6 +424,19 @@ section.tight { padding: 0; }
   margin-bottom: 0.3rem;
 }
 
+.globe-filters { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.gf-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.gf-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.15em; }
+.gf-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.gf-btn {
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em;
+  padding: 0.3rem 0.75rem; border: 1px solid var(--border);
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: all .2s; text-transform: uppercase;
+}
+.gf-btn:hover { border-color: var(--border-strong); color: var(--fg); }
+.gf-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,85,0,0.07); }
+
 .globe-stage {
   position: relative;
   aspect-ratio: 1;
@@ -1075,6 +1088,26 @@ footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }
           <div class="gs"><b id="gs-events">—</b>Eventos no mapa</div>
           <div class="gs"><b id="gs-latest">—</b>Mais recente</div>
         </div>
+
+        <div class="globe-filters">
+          <div class="gf-group">
+            <span class="gf-label mono">TEMPO</span>
+            <div class="gf-btns" id="filter-time">
+              <button class="gf-btn active" data-val="all">Tudo</button>
+              <button class="gf-btn" data-val="24h">24h</button>
+              <button class="gf-btn" data-val="7d">7 dias</button>
+            </div>
+          </div>
+          <div class="gf-group">
+            <span class="gf-label mono">TIPO</span>
+            <div class="gf-btns" id="filter-cat">
+              <button class="gf-btn active" data-val="all">Tudo</button>
+              <button class="gf-btn" data-val="geo">Geopolítica</button>
+              <button class="gf-btn" data-val="macro">Macro</button>
+              <button class="gf-btn" data-val="cripto">Cripto</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="globe-stage" id="globe-stage">
@@ -1295,6 +1328,7 @@ async function loadAll() {
   renderAnalysts();
   renderPartners();
   await setupGlobe();
+  setupGlobeFilters();
 }
 
 /* ==========================================================
@@ -2176,26 +2210,78 @@ function geoFromText(text) {
 
 const WORKER_URL = 'https://wesearch-news.wesearch.workers.dev';
 
+// Keyword classifiers — ordem importa: cripto > geo > macro
+const CRIPTO_KW = ['bitcoin','ethereum','crypto','blockchain','defi','nft','web3','btc','eth','solana','binance','coinbase','altcoin','stablecoin','token','halving','dex','on-chain','onchain'];
+const GEO_KW    = ['war','conflict','military','sanction','treaty','nato','united nations',' un ','attack','missile','troops','ceasefire','diplomat','coup','protest','refugee','invasion','offensive','airstrike','hostage','insurgent','rebel'];
+const MACRO_KW  = ['inflation','gdp','recession','interest rate','federal reserve','ecb','imf','world bank','tariff','trade war','economy','economic','fiscal','monetary','bond yield','unemployment','deficit','surplus','oil price','opec','central bank','rate cut','rate hike','earnings','stock market','nasdaq','s&p 500','dow jones'];
+
+function classifyTitle(title, sourceCategory) {
+  if (sourceCategory) return sourceCategory; // Guardian sectionId já mapeado
+  const t = title.toLowerCase();
+  if (CRIPTO_KW.some(k => t.includes(k))) return 'cripto';
+  if (GEO_KW.some(k => t.includes(k)))    return 'geo';
+  if (MACRO_KW.some(k => t.includes(k)))  return 'macro';
+  return 'other';
+}
+
+// Estado dos filtros activos
+let _filterTime = 'all';
+let _filterCat  = 'all';
+let _allEventos = []; // todos os eventos sem filtro
+
+function applyFilters() {
+  const now   = Date.now();
+  const limit = _filterTime === '24h' ? 86400000 : _filterTime === '7d' ? 604800000 : Infinity;
+  EVENTOS = _allEventos.filter(ev => {
+    if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
+    if (limit < Infinity && ev.publishedAt) {
+      const age = now - new Date(ev.publishedAt).getTime();
+      if (age > limit) return false;
+    }
+    return true;
+  });
+  if (window._globe?.rebuildMarkers) window._globe.rebuildMarkers(EVENTOS);
+  const gsEl = document.getElementById('gs-events');
+  if (gsEl) gsEl.textContent = String(EVENTOS.length).padStart(2,'0');
+}
+
+function setupGlobeFilters() {
+  document.getElementById('filter-time')?.addEventListener('click', e => {
+    const btn = e.target.closest('.gf-btn');
+    if (!btn) return;
+    document.querySelectorAll('#filter-time .gf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _filterTime = btn.dataset.val;
+    applyFilters();
+  });
+  document.getElementById('filter-cat')?.addEventListener('click', e => {
+    const btn = e.target.closest('.gf-btn');
+    if (!btn) return;
+    document.querySelectorAll('#filter-cat .gf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _filterCat = btn.dataset.val;
+    applyFilters();
+  });
+}
+
 async function fetchGlobeNews() {
   const results = [];
   const seen    = new Set();
 
-  function addArticle(id, title, url, source, countryCode) {
+  function addArticle(id, title, url, source, countryCode, publishedAt, sourceCategory) {
     const dedup = title.toLowerCase().slice(0, 50);
     if (seen.has(dedup)) return;
 
-    // 1. Keyword matching no título — cidade específica quando possível
     let geo = geoFromText(title);
-
-    // 2. Fallback: ISO com pick aleatório de cidades do país
     if (!geo && countryCode) geo = geoFromISO(countryCode);
-
     if (!geo) return;
 
     const { lat, lon, tag, country } = geo;
     seen.add(dedup);
     const jLat = lat + (Math.random() - 0.5) * 2;
     const jLon = lon + (Math.random() - 0.5) * 2;
+    const newsCategory = classifyTitle(title, sourceCategory);
+    const pub = publishedAt ? new Date(publishedAt) : null;
     results.push({
       id, url, source,
       title: title.length > 90 ? title.slice(0, 87) + '…' : title,
@@ -2203,9 +2289,11 @@ async function fetchGlobeNews() {
       baseLat: lat, baseLon: lon,
       lat: Math.max(-85, Math.min(85, jLat)),
       lon: ((jLon + 180) % 360) - 180,
-      date: new Date().toISOString().slice(0, 10),
+      date: pub ? pub.toISOString().slice(0,10) : new Date().toISOString().slice(0,10),
+      publishedAt: pub ? pub.toISOString() : null,
       author: source,
-      category: 'MUNDO',
+      category: newsCategory.toUpperCase(),
+      newsCategory,
     });
   }
 
@@ -2214,7 +2302,7 @@ async function fetchGlobeNews() {
     const articles = data.articles || [];
     for (const item of articles) {
       const id = item.source.replace(/\W/g, '') + '-' + item.title.slice(0, 20).replace(/\W/g, '');
-      addArticle(id, item.title, item.url, item.source, item.countryCode);
+      addArticle(id, item.title, item.url, item.source, item.countryCode, item.publishedAt, item.category);
     }
     console.info(`[globe] recebidos: ${articles.length} | no globo: ${results.length}`);
   } catch(e) { console.warn('[globe] worker indisponível', e); }
@@ -2224,7 +2312,8 @@ async function fetchGlobeNews() {
   // Geo-tag por posição: d3.geoContains diz qual país contém as coords base
   if (window._globe?.geoTagArticles) window._globe.geoTagArticles(results);
 
-  EVENTOS = results;
+  _allEventos = results;
+  applyFilters();
 
   // Update stats
   const gsEl = document.getElementById('gs-events');
