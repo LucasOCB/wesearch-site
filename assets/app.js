@@ -1150,6 +1150,18 @@ loadAll()
   .then(() => setInterval(fetchGlobeNews, 5 * 60 * 1000))
   .catch(err => console.error(err));
 
+// Pause stream animations when hero is off-screen
+(function() {
+  const svg = document.querySelector('.hero-mark-streams');
+  if (!svg || !window.IntersectionObserver) return;
+  new IntersectionObserver(([entry]) => {
+    svg.style.animationPlayState = entry.isIntersecting ? '' : 'paused';
+    svg.querySelectorAll('.trail, .dot').forEach(el => {
+      el.style.animationPlayState = entry.isIntersecting ? '' : 'paused';
+    });
+  }, { threshold: 0.1 }).observe(svg.closest('.hero-mark') || svg);
+})();
+
 /* ==========================================================
    MARKET TICKER
    - Binance + Alternative.me fetched directly (CORS-open, keyless).
