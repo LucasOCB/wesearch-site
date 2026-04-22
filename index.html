@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://wesearch-news.wesearch.workers.dev https://api.rss2json.com https://api.alternative.me https://api.binance.com https://economia.awesomeapi.com.br; frame-ancestors 'none'; base-uri 'self';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://wesearch-news.wesearch.workers.dev; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests;" />
 <link rel="stylesheet" href="assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous" defer></script>
@@ -30,10 +30,10 @@
 <div class="page" id="top">
 
   <!-- ============ HERO ============ -->
-  <section class="hero" style="height: 794.875px; text-align: left;">
+  <section class="hero">
     <div class="hero-tick tl">
       <div>BR · 19:42 BRT</div>
-      <div style="opacity:.6">Nº EDIÇÃO 042 / 2026</div>
+      <div class="u-dim">Nº EDIÇÃO 042 / 2026</div>
     </div>
 
     <div class="hero-left">
@@ -52,9 +52,9 @@
     </div>
 
     <div class="hero-right" aria-hidden="true">
-      <div class="hero-mark" style="text-align: right;">
+      <div class="hero-mark">
         <!-- Decorative rings removed per request -->
-        <img src="assets/wesearch-logo.png?v=2" alt="WeSearch" class="hero-mark-img" style="object-fit: cover;" />
+        <img src="assets/wesearch-logo.png?v=2" alt="WeSearch" class="hero-mark-img" />
         <svg class="hero-mark-streams" viewBox="0 0 320 320" aria-hidden="true" preserveAspectRatio="none">
           <defs>
             <path id="stream-a" d="M -20 40   C 60 110,  180 90,  340 200" />
@@ -84,10 +84,10 @@
   </section>
 
   <!-- ============ CREDIBILITY STRIP ============ -->
-  <section class="tight" style="padding: 0;">
-    <div class="credibility" aria-label="Métricas" style="padding: 25px 0 0; height: 150px;">
+  <section class="tight">
+    <div class="credibility credibility--compact" aria-label="Métricas">
       <div class="metric">
-        <div class="num">1.3K<span style="color:var(--orange-deep)">+</span></div>
+        <div class="num">1.3K<span class="u-text-orange-deep">+</span></div>
         <div class="lbl">Assinantes no Substack</div>
       </div>
       <div class="metric">
@@ -108,13 +108,13 @@
   <!-- ============ MARKET TICKER ============ -->
   <section class="ticker-section tight" aria-label="Ticker de mercado">
     <div class="ticker" id="ticker" role="marquee" aria-live="off">
-      <div class="ticker-track" id="ticker-track" style="height: 45px; flex-direction: row; padding: 0;"></div>
+      <div class="ticker-track" id="ticker-track"></div>
     </div>
   </section>
 
   <!-- ============ GLOBE ============ -->
   <section id="globo">
-    <div class="globe-wrap" style="padding: 50px 0 0;">
+    <div class="globe-wrap globe-wrap--pad-top">
       <div class="globe-copy">
         <span class="mono orange label">◆ Cobertura Global</span>
         <h2 class="heading">Onde a WeSearch está olhando<span class="dot">.</span></h2>
@@ -144,10 +144,31 @@
               <button class="gf-btn" data-val="cripto">Cripto</button>
             </div>
           </div>
-          <div class="gf-group" id="filter-source-group" style="display:none">
+          <div class="gf-group u-hidden" id="filter-source-group">
             <span class="gf-label mono">FONTE</span>
-            <div class="gf-btns gf-sources" id="filter-source"></div>
+            <button class="gf-btn gf-source-trigger" id="filter-source-trigger" type="button">
+              <span id="filter-source-label">Todas</span>
+              <span class="gf-caret" aria-hidden="true">▸</span>
+            </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Source filter modal -->
+      <div class="gf-modal" id="source-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="source-modal-title">
+        <div class="gf-modal-backdrop" id="source-modal-backdrop"></div>
+        <div class="gf-modal-panel">
+          <header class="gf-modal-head">
+            <span class="mono orange">◆ Fontes</span>
+            <h3 id="source-modal-title">Selecionar cobertura</h3>
+            <button class="gf-modal-close" id="source-modal-close" aria-label="Fechar">✕</button>
+          </header>
+          <div class="gf-modal-actions">
+            <button class="gf-btn" id="filter-source-all" type="button">Todas</button>
+            <button class="gf-btn" id="filter-source-none" type="button">Nenhuma</button>
+            <span class="gf-modal-count mono" id="filter-source-count">—</span>
+          </div>
+          <div class="gf-modal-list" id="filter-source"></div>
         </div>
       </div>
 
@@ -180,11 +201,6 @@
           <div class="ttl" id="tip-title">Title</div>
           <div class="meta" id="tip-meta">META</div>
         </div>
-        <div class="globe-legend" style="display:none">
-          <div class="row"><span class="sq land"></span><span>Cobertura geográfica</span></div>
-          <div class="row"><span class="sq"></span><span>Análise publicada</span></div>
-        </div>
-
         <!-- SR fallback list -->
         <ul class="sr-only" id="events-sr"></ul>
       </div>
@@ -192,13 +208,13 @@
   </section>
 
   <!-- ============ ARTICLES ============ -->
-  <section id="artigos" style="height: 800px;">
+  <section id="artigos">
     <div class="section-head">
       <div>
         <span class="mono orange label">◆ Publicações</span>
-        <h2 class="heading" style="margin-top:1rem;">Últimas análises<span class="dot" style="color:var(--orange)">.</span></h2>
+        <h2 class="heading heading--spaced">Últimas análises<span class="dot u-text-orange">.</span></h2>
       </div>
-      <div class="right" style="display:flex; flex-direction:column; align-items:flex-end; gap:1rem;">
+      <div class="right right--stack">
         <a href="https://wesearch.substack.com" target="_blank" rel="noopener" class="ghost-link">Ver todas <span class="arr">↗</span></a>
         <div class="carousel-ctl">
           <button id="art-prev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
@@ -216,8 +232,8 @@
     <div class="section-head">
       <div>
         <span class="mono orange label">◆ Quem escreve</span>
-        <h2 class="heading" style="margin-top:1rem;">Analistas<span class="dot" style="color:var(--orange)">.</span></h2>
-        <p style="color:var(--muted); margin-top:1rem; max-width:52ch; font-size:0.95rem;">
+        <h2 class="heading heading--spaced">Analistas<span class="dot u-text-orange">.</span></h2>
+        <p class="section-lede">
           A inteligência coletiva por trás da WeSearch. Cada análise é assinada. Cada perspectiva é auditável.
         </p>
       </div>
@@ -238,8 +254,8 @@
     <div class="section-head">
       <div>
         <span class="mono orange label">◆ Parceiros</span>
-        <h2 class="heading" style="margin-top:1rem;">Com quem caminhamos<span class="dot" style="color:var(--orange)">.</span></h2>
-        <p style="color:var(--muted); margin-top:1rem; max-width:52ch; font-size:0.95rem;">
+        <h2 class="heading heading--spaced">Com quem caminhamos<span class="dot u-text-orange">.</span></h2>
+        <p class="section-lede">
           Instituições e projetos que compartilham da mesma obsessão por research bem feito.
         </p>
       </div>

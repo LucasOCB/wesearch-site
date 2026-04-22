@@ -102,6 +102,8 @@ def parse_posts(posts: list) -> list[dict]:
         category = resolve_category(tags)
 
         thumbnail = post.get("cover_image") or None
+        if thumbnail and not (thumbnail.startswith("https://") or thumbnail.startswith("http://")):
+            thumbnail = None
 
         artigos.append({
             "n": f"{i:02d}",

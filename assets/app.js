@@ -9,6 +9,16 @@ const cfg = {
   halftone: true
 };
 
+// Magic numbers nomeados (setInterval/setTimeout/filtros de tempo).
+const CFG = {
+  WORKER_URL: 'https://wesearch-news.wesearch.workers.dev',
+  GLOBE_REFRESH_MS: 5 * 60 * 1000,       // intervalo do fetch do globo
+  TICKER_REFRESH_MS: 120 * 1000,         // intervalo do ticker de mercado (120s p/ ficar dentro do free tier)
+  DRAG_RESUME_MS: 250,                   // delay pra retomar auto-rotate após drag
+  FILTER_24H_MS: 24 * 60 * 60 * 1000,
+  FILTER_7D_MS:  7 * 24 * 60 * 60 * 1000,
+};
+
 /* ==========================================================
    DATA LOADING
 ========================================================== */
@@ -27,12 +37,18 @@ const CATEGORY_MAP = {
 function extractFirstImg(html) {
   if (!html) return null;
   const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return m ? m[1] : null;
+  if (!m) return null;
+  const src = m[1];
+  return /^https?:\/\//i.test(src) ? src : null;
+}
+
+function safeUrl(u) {
+  if (!u) return '#';
+  return /^https?:\/\//i.test(u) ? u : '#';
 }
 
 async function fetchArtigosSubstack() {
-  const rss = encodeURIComponent('https://wesearch.substack.com/feed');
-  const url = `https://api.rss2json.com/v1/api.json?rss_url=${rss}&count=10`;
+  const url = `${CFG.WORKER_URL}/substack`;
   try {
     const data = await fetch(url).then(r => r.json());
     if (data.status !== 'ok' || !data.items?.length) throw new Error('sem itens');
@@ -78,7 +94,7 @@ async function loadAll() {
 
   // SR list
   const sr = document.getElementById('events-sr');
-  sr.innerHTML = EVENTOS.map(e => `<li>${e.date} — ${e.title} (${e.country})</li>`).join('');
+  sr.innerHTML = EVENTOS.map(e => `<li>${esc(e.date)} — ${esc(e.title)} (${esc(e.country)})</li>`).join('');
 
   renderArticles();
   renderAnalysts();
@@ -96,7 +112,7 @@ const nav = document.getElementById('nav');
    ARTICLES CAROUSEL
 ========================================================== */
 function esc(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 const THUMB_PALETTES = [
@@ -111,6 +127,9 @@ function makeThumb(article, idx) {
     return `<img src="${esc(article.thumbnail)}" alt="" loading="lazy">`;
   }
   const p = THUMB_PALETTES[idx % THUMB_PALETTES.length];
+  const cat  = esc(article.category);
+  const num  = esc(article.n);
+  const date = esc(article.date);
   const variants = [
     // Concentric arcs
     `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
@@ -123,8 +142,8 @@ function makeThumb(article, idx) {
         <circle cx="260" cy="170" r="200" stroke-width="1" opacity="0.12"/>
       </g>
       <circle cx="260" cy="170" r="4" fill="${p[0]}"/>
-      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
-      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${cat}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${num} / ${date}</text>
     </svg>`,
     // Line chart
     `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
@@ -137,8 +156,8 @@ function makeThumb(article, idx) {
       <path d="M 10 150 L 40 140 L 70 120 L 100 130 L 130 95 L 160 110 L 190 75 L 220 80 L 250 50 L 280 60 L 310 30" stroke="${p[0]}" stroke-width="1.6" fill="none"/>
       <path d="M 10 150 L 40 140 L 70 120 L 100 130 L 130 95 L 160 110 L 190 75 L 220 80 L 250 50 L 280 60 L 310 30 L 310 200 L 10 200 Z" fill="${p[0]}" opacity="0.08"/>
       <circle cx="310" cy="30" r="3" fill="${p[0]}"/>
-      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
-      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${cat}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${num} / ${date}</text>
     </svg>`,
     // Dot grid (halftone)
     `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
@@ -158,8 +177,8 @@ function makeThumb(article, idx) {
           return r > 0.2 ? `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(2)}" opacity="${(r/2.2).toFixed(2)}"/>` : '';
         }).join('')).join('')}
       </g>
-      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
-      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${article.n} / ${article.date}</text>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${cat}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">№ ${num} / ${date}</text>
     </svg>`,
     // Typographic figure
     `<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
@@ -173,9 +192,9 @@ function makeThumb(article, idx) {
         <line x1="160" y1="0" x2="160" y2="200"/>
         <line x1="240" y1="0" x2="240" y2="200"/>
       </g>
-      <text x="160" y="135" font-family="Fraunces,serif" font-weight="400" font-size="130" fill="${p[0]}" text-anchor="middle" letter-spacing="-5">${article.n}</text>
-      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${article.category}</text>
-      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">${article.date}</text>
+      <text x="160" y="135" font-family="Fraunces,serif" font-weight="400" font-size="130" fill="${p[0]}" text-anchor="middle" letter-spacing="-5">${num}</text>
+      <text x="20" y="40" font-family="IBM Plex Mono,monospace" font-size="10" fill="#8a8580" letter-spacing="2">${cat}</text>
+      <text x="20" y="185" font-family="IBM Plex Mono,monospace" font-size="9" fill="#5c5853" letter-spacing="1.6">${date}</text>
     </svg>`,
   ];
   return variants[idx % variants.length];
@@ -184,20 +203,20 @@ function makeThumb(article, idx) {
 function renderArticles() {
   const container = document.getElementById('carousel-articles');
   container.innerHTML = ARTIGOS.map((a, i) => `
-    <a class="card" href="${a.url}" target="_blank" rel="noopener">
+    <a class="card" href="${safeUrl(a.url)}" target="_blank" rel="noopener">
       <div class="thumb">${makeThumb(a, i)}</div>
       <div class="body">
         <div class="meta-line">
-          <span class="n">№ ${a.n}</span>
+          <span class="n">№ ${esc(a.n)}</span>
           <span class="sep">·</span>
-          <span>${a.date}</span>
+          <span>${esc(a.date)}</span>
           <span class="sep">·</span>
-          <span>${a.category}</span>
+          <span>${esc(a.category)}</span>
         </div>
-        <h3 class="ttl">${a.title}</h3>
-        <p class="excerpt">${a.excerpt}</p>
+        <h3 class="ttl">${esc(a.title)}</h3>
+        <p class="excerpt">${esc(a.excerpt)}</p>
         <div class="foot">
-          <span>Por ${a.author}</span>
+          <span>Por ${esc(a.author)}</span>
           <span class="arr">↗</span>
         </div>
       </div>
@@ -213,15 +232,15 @@ function renderArticles() {
 function renderAnalysts() {
   const container = document.getElementById('carousel-analysts');
   container.innerHTML = ANALISTAS.map((an, i) => `
-    <a class="analyst" href="${an.substackUrl}" target="_blank" rel="noopener">
+    <a class="analyst" href="${safeUrl(an.substackUrl)}" target="_blank" rel="noopener">
       <div class="frame">
         <span class="tag">№ ${String(i+1).padStart(2,'0')}</span>
         <span class="ticks"></span>
-        <span class="initials">${an.initials}</span>
+        <span class="initials">${esc(an.initials)}</span>
       </div>
       <div>
-        <div class="name">${an.name}</div>
-        <div class="spec" style="margin-top:0.4rem;">${an.specialty}</div>
+        <div class="name">${esc(an.name)}</div>
+        <div class="spec">${esc(an.specialty)}</div>
       </div>
       <div class="go">
         <span>LinkedIn</span>
@@ -255,14 +274,12 @@ function setupCarousel(container, prev, next, bar) {
    PARTNERS (static wordmarks, white → orange on hover)
 ========================================================== */
 function wordmark(name) {
-  // Simple editorial wordmark rendered in Fraunces
-  const esc = name.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-  return `<div class="plogo" style="font-family:var(--serif); font-weight:500; font-size:1.35rem; letter-spacing:-0.015em; font-variation-settings:'opsz' 144; color:inherit; text-align:center; line-height:1;">${esc}</div>`;
+  return `<div class="plogo">${esc(name)}</div>`;
 }
 function renderPartners() {
   const grid = document.getElementById('partners-grid');
   grid.innerHTML = PARCEIROS.map((p, i) => `
-    <a class="partner" href="${p.url}" target="_blank" rel="noopener" aria-label="${p.name}">
+    <a class="partner" href="${safeUrl(p.url)}" target="_blank" rel="noopener" aria-label="${esc(p.name)}">
       <span class="ptag">Nº ${String(i+1).padStart(2,'0')}</span>
       ${wordmark(p.name)}
     </a>
@@ -367,7 +384,7 @@ async function setupGlobe() {
                 Math.max(-85, Math.min(85, dragRot[1] - (y - dragStart[1]) * k)), 0];
     projection.rotate(rotation); dirty = true;
   };
-  const onUp = () => { dragStart = null; setTimeout(() => { if (!dragStart) autoRotate = cfg.autoRotate; }, 250); };
+  const onUp = () => { dragStart = null; setTimeout(() => { if (!dragStart) autoRotate = cfg.autoRotate; }, CFG.DRAG_RESUME_MS); };
   svg.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
   window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
   window.addEventListener('mouseup', onUp);
@@ -454,9 +471,15 @@ async function setupGlobe() {
       c.setAttribute('class', 'evt' + (ev.id === latestId ? ' pulse' : ''));
       c.setAttribute('data-id', ev.id);
       c.setAttribute('r', ev.id === latestId ? 5 : 4);
+      // Nasce invisível: cx/cy default é 0 (canto do SVG). Próxima frame
+      // reposiciona via projeção antes de revelar, evitando flash fora do globo.
+      c.style.display = 'none';
       c.addEventListener('mouseenter', () => showTip(ev, c));
       c.addEventListener('mouseleave', hideTip);
-      c.addEventListener('click', () => { window.open(ev.url, '_blank', 'noopener'); });
+      c.addEventListener('click', () => {
+        const u = safeUrl(ev.url);
+        if (u !== '#') window.open(u, '_blank', 'noopener');
+      });
       frag.appendChild(c);
       evtNodes.set(ev.id, c);
     });
@@ -550,7 +573,7 @@ async function setupGlobe() {
       ? 'Nenhuma publicação ainda'
       : items.length + ' publicaç' + (items.length === 1 ? 'ão' : 'ões');
     panelList.innerHTML = items.length
-      ? items.map(ev => `<a class="cp-item" href="${esc(ev.url)}" target="_blank" rel="noopener">
+      ? items.map(ev => `<a class="cp-item" href="${safeUrl(ev.url)}" target="_blank" rel="noopener">
           <span class="cp-cat">${esc(ev.category)}</span>
           <span class="cp-title">${esc(ev.title)}</span>
           <span class="cp-meta">${esc(ev.source||ev.author)} · ${esc(ev.date)}</span>
@@ -561,6 +584,12 @@ async function setupGlobe() {
   function closeCountryPanel() { panel.classList.remove('on'); }
   if (panelClose) panelClose.addEventListener('click', closeCountryPanel);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCountryPanel(); });
+  document.addEventListener('click', (e) => {
+    if (!panel.classList.contains('on')) return;
+    if (e.target.closest('#country-panel')) return;
+    if (e.target.closest('#globe-svg')) return; // svg click handler já cuida
+    closeCountryPanel();
+  });
 
   function setHoverFeat(feat) {
     if (feat === hoverFeat) return;
@@ -734,14 +763,32 @@ async function setupGlobe() {
     rebuildMarkers: (events) => { buildMarkersFromEvents(events); },
     geoTagArticles: (articles) => {
       if (!countriesFC.features.length) return;
+      // Pool de pontos dispersos por feature. Dispersão é proporcional ao
+      // bounding-box do país — países grandes (US, RU, BR) espalham naturalmente;
+      // pequenos (SG, BH) ficam concentrados sem sair do polígono.
+      const pool = new Map();
+      function samplePoint(feat) {
+        const [[lon0, lat0], [lon1, lat1]] = d3.geoBounds(feat);
+        for (let i = 0; i < 60; i++) {
+          const lon = lon0 + Math.random() * (lon1 - lon0);
+          const lat = lat0 + Math.random() * (lat1 - lat0);
+          if (d3.geoContains(feat, [lon, lat])) return [lat, lon];
+        }
+        return null;
+      }
       for (const ev of articles) {
         if (ev.baseLat == null) continue;
+        let foundFeat = null;
         for (const feat of countriesFC.features) {
-          if (d3.geoContains(feat, [ev.baseLon, ev.baseLat])) {
-            ev.tag     = featureToTag(feat);
-            ev.country = feat.properties?.name || feat.properties?.NAME || ev.country;
-            break;
-          }
+          if (d3.geoContains(feat, [ev.baseLon, ev.baseLat])) { foundFeat = feat; break; }
+        }
+        if (foundFeat) {
+          ev.tag     = featureToTag(foundFeat);
+          ev.country = foundFeat.properties?.name || foundFeat.properties?.NAME || ev.country;
+          const key = ev.tag;
+          if (!pool.has(key)) pool.set(key, foundFeat);
+          const p = samplePoint(pool.get(key));
+          if (p) { ev.lat = Math.max(-85, Math.min(85, p[0])); ev.lon = ((p[1] + 180) % 360) - 180; }
         }
       }
     },
@@ -766,7 +813,7 @@ const GEO_DICT = {
   'venezuela': [10.49, -66.88], 'caracas': [10.49, -66.88], 'maduro': [10.49, -66.88],
   'chile': [-33.45, -70.67], 'santiago': [-33.45, -70.67],
   'peru': [-12.04, -77.03], 'lima': [-12.04, -77.03],
-  'ecuador': [-0.23, -78.52], 'bolivia': [-16.50, -68.15], 'uruguay': [-34.90, -56.19],
+  'ecuador': [-0.23, -78.52], 'bolivia': [-16.50, -68.15], 'uruguay': [-33.00, -56.00],
   'cuba': [23.13, -82.38], 'havana': [23.13, -82.38],
   // Europe — países e líderes
   'united kingdom': [51.51, -0.13], 'britain': [51.51, -0.13], 'london': [51.51, -0.13],
@@ -792,18 +839,18 @@ const GEO_DICT = {
   'nato': [50.85, 4.35], 'hungary': [47.50, 19.04], 'orbán': [47.50, 19.04],
   'romania': [44.43, 26.10], 'czech': [50.08, 14.44], 'serbia': [44.80, 20.46],
   // Middle East
-  'israel': [31.77, 35.22], 'tel aviv': [32.08, 34.78], 'netanyahu': [31.77, 35.22], 'israeli': [31.77, 35.22],
+  'israel': [32.08, 34.78], 'tel aviv': [32.08, 34.78], 'netanyahu': [32.08, 34.78], 'israeli': [32.08, 34.78],
   'iran': [35.69, 51.39], 'tehran': [35.69, 51.39], 'iranian': [35.69, 51.39],
   'saudi arabia': [24.69, 46.72], 'riyadh': [24.69, 46.72], 'mbs': [24.69, 46.72],
   'iraq': [33.34, 44.40], 'baghdad': [33.34, 44.40],
   'syria': [33.51, 36.29], 'damascus': [33.51, 36.29],
   'lebanon': [33.89, 35.50], 'beirut': [33.89, 35.50], 'hezbollah': [33.89, 35.50],
   'yemen': [15.55, 44.21], 'houthi': [15.55, 44.21],
-  'gaza': [31.52, 34.45], 'west bank': [31.90, 35.20], 'hamas': [31.52, 34.45],
+  'gaza': [32.08, 34.78], 'west bank': [32.08, 34.78], 'hamas': [32.08, 34.78],
   'uae': [24.45, 54.37], 'dubai': [25.20, 55.27], 'abu dhabi': [24.45, 54.37],
   'qatar': [25.29, 51.53], 'doha': [25.29, 51.53],
   'kuwait': [29.37, 47.98], 'jordan': [31.95, 35.93], 'amman': [31.95, 35.93],
-  'oman': [23.61, 58.59], 'bahrain': [26.22, 50.59],
+  'oman': [22.00, 57.50], 'bahrain': [24.69, 46.72],
   // Asia — países, líderes e cidades
   'china': [39.91, 116.39], 'beijing': [39.91, 116.39], 'xi jinping': [39.91, 116.39],
   'shanghai': [31.23, 121.47], 'chinese': [39.91, 116.39],
@@ -818,7 +865,7 @@ const GEO_DICT = {
   'indonesia': [-6.21, 106.85], 'jakarta': [-6.21, 106.85],
   'pakistan': [33.72, 73.04], 'islamabad': [33.72, 73.04], 'karachi': [24.86, 67.01],
   'afghanistan': [34.52, 69.18], 'kabul': [34.52, 69.18], 'taliban': [34.52, 69.18],
-  'bangladesh': [23.72, 90.41], 'sri lanka': [6.93, 79.84],
+  'bangladesh': [23.72, 90.41], 'sri lanka': [7.60, 80.70],
   'vietnam': [21.03, 105.85], 'hanoi': [21.03, 105.85],
   'thailand': [13.76, 100.50], 'bangkok': [13.76, 100.50],
   'malaysia': [3.15, 101.69], 'kuala lumpur': [3.15, 101.69],
@@ -838,17 +885,241 @@ const GEO_DICT = {
   'tanzania': [-6.79, 39.21], 'uganda': [0.32, 32.58],
   'angola': [-8.84, 13.23], 'mozambique': [-25.97, 32.57],
   'somalia': [2.05, 45.34], 'mali': [12.65, -8.00], 'niger': [13.51, 2.12],
-  'libya': [32.90, 13.18], 'tripoli': [32.90, 13.18], 'tunisia': [36.82, 10.17],
+  'libya': [26.34, 17.23], 'tripoli': [30.50, 14.50], 'tunisia': [36.82, 10.17],
   'algeria': [36.74, 3.06], 'senegal': [14.71, -17.47],
   // Oceania
   'australia': [-35.28, 149.13], 'sydney': [-33.87, 151.21], 'canberra': [-35.28, 149.13],
   'melbourne': [-37.81, 144.96], 'australian': [-35.28, 149.13],
   'new zealand': [-41.29, 174.78], 'wellington': [-41.29, 174.78],
   // Crypto / Macro — termos com âncora geográfica
-  'bitcoin': [37.57, 126.98], 'crypto': [1.35, 103.82], 'ethereum': [37.57, 126.98],
+  'bitcoin': [40.71, -74.01], 'btc': [40.71, -74.01], 'satoshi': [40.71, -74.01],
+  'crypto': [40.71, -74.01], 'cryptocurrency': [40.71, -74.01],
+  'ethereum': [47.38, 8.54], 'eth': [47.38, 8.54], 'vitalik': [47.38, 8.54], 'buterin': [47.38, 8.54],
+  'solana': [37.77, -122.42], 'xrp': [37.77, -122.42], 'ripple': [37.77, -122.42],
+  'cardano': [47.38, 8.54], 'polkadot': [47.38, 8.54],
+  'chainlink': [37.77, -122.42], 'uniswap': [40.71, -74.01],
+  'aave': [51.51, -0.13], 'makerdao': [37.77, -122.42], 'compound': [37.77, -122.42],
+  'avalanche': [40.71, -74.01], 'avax': [40.71, -74.01],
+  'aptos': [37.77, -122.42], 'arbitrum': [40.71, -74.01], 'optimism': [37.77, -122.42],
+  'stablecoin': [42.36, -71.06], 'stablecoins': [42.36, -71.06],
+  'defi': [37.77, -122.42], 'nft': [40.71, -74.01], 'nfts': [40.71, -74.01],
+  'blockchain': [37.77, -122.42], 'web3': [37.77, -122.42],
+  'halving': [40.71, -74.01], 'hashrate': [38.90, -77.03], 'hash rate': [38.90, -77.03],
+  'miner': [38.90, -77.03], 'miners': [38.90, -77.03], 'mining': [38.90, -77.03],
+  'altcoin': [40.71, -74.01], 'altcoins': [40.71, -74.01],
+  'memecoin': [40.71, -74.01], 'meme coin': [40.71, -74.01],
+  'dogecoin': [40.71, -74.01], 'doge': [40.71, -74.01],
+  'shiba': [40.71, -74.01],
+  'bnb': [25.20, 55.27],
+  'staking': [40.71, -74.01], 'tvl': [40.71, -74.01],
+  'smart contract': [37.77, -122.42], 'smart contracts': [37.77, -122.42],
+  // Exchanges
+  'binance': [25.20, 55.27], 'changpeng zhao': [25.20, 55.27],
+  'coinbase': [37.77, -122.42], 'brian armstrong': [37.77, -122.42],
+  'kraken': [37.77, -122.42], 'winklevoss': [40.71, -74.01],
+  'bybit': [25.20, 55.27], 'okx': [25.04, 121.56], 'bitget': [1.35, 103.82], 'kucoin': [1.35, 103.82],
+  'bitfinex': [22.30, 114.17], 'deribit': [51.51, -0.13],
+  // Stablecoins
+  'tether': [22.30, 114.17], 'usdt': [22.30, 114.17],
+  'circle': [42.36, -71.06], 'usdc': [42.36, -71.06],
+  // Crypto-adjacent firms / vehicles
+  'microstrategy': [38.90, -77.03], 'saylor': [38.90, -77.03], 'michael saylor': [38.90, -77.03],
+  'grayscale': [40.71, -74.01], 'gbtc': [40.71, -74.01],
+  'blackrock': [40.71, -74.01], 'larry fink': [40.71, -74.01],
+  'fidelity': [42.36, -71.06], 'vaneck': [40.71, -74.01], 'ark invest': [40.71, -74.01],
+  'bitcoin etf': [40.71, -74.01], 'ethereum etf': [40.71, -74.01], 'spot etf': [40.71, -74.01],
+  'gensler': [38.90, -77.03], 'gary gensler': [38.90, -77.03], 'paul atkins': [38.90, -77.03],
+  'cftc': [38.90, -77.03], 'fdic': [38.90, -77.03],
+  'ftx': [40.71, -74.01], 'sbf': [40.71, -74.01], 'bankman-fried': [40.71, -74.01], 'bankman fried': [40.71, -74.01],
+  'luna': [37.57, 126.98], 'terra luna': [37.57, 126.98], 'do kwon': [37.57, 126.98],
+  'celsius': [40.71, -74.01], 'voyager': [40.71, -74.01],
+  '3ac': [1.35, 103.82], 'three arrows': [1.35, 103.82], 'mt gox': [35.68, 139.69], 'mt. gox': [35.68, 139.69],
+  'silvergate': [40.71, -74.01], 'signature bank': [40.71, -74.01], 'svb': [37.77, -122.42],
+  'polymarket': [40.71, -74.01], 'prediction market': [40.71, -74.01], 'prediction markets': [40.71, -74.01],
+  'kalshi': [40.71, -74.01],
+
+  // Macro — Fed / bancos centrais / dados
+  'powell': [38.90, -77.03], 'jerome powell': [38.90, -77.03],
+  'yellen': [38.90, -77.03], 'janet yellen': [38.90, -77.03],
+  'bessent': [38.90, -77.03], 'scott bessent': [38.90, -77.03],
+  'fomc': [38.90, -77.03], 'jackson hole': [38.90, -77.03],
+  'rate cut': [38.90, -77.03], 'rate cuts': [38.90, -77.03],
+  'rate hike': [38.90, -77.03], 'rate hikes': [38.90, -77.03],
+  'interest rate': [38.90, -77.03], 'interest rates': [38.90, -77.03],
+  'basis point': [38.90, -77.03], 'basis points': [38.90, -77.03],
+  'inflation': [38.90, -77.03], 'disinflation': [38.90, -77.03], 'deflation': [38.90, -77.03], 'stagflation': [38.90, -77.03],
+  'cpi': [38.90, -77.03], 'core cpi': [38.90, -77.03],
+  'pce': [38.90, -77.03], 'core pce': [38.90, -77.03], 'ppi': [38.90, -77.03],
+  'unemployment': [38.90, -77.03], 'jobless': [38.90, -77.03], 'jobs report': [38.90, -77.03],
+  'nonfarm payrolls': [38.90, -77.03], 'payrolls': [38.90, -77.03], 'nfp': [38.90, -77.03],
+  'retail sales': [38.90, -77.03], 'consumer confidence': [38.90, -77.03],
+  'housing starts': [38.90, -77.03],
+  'pmi': [38.90, -77.03], 'ism': [38.90, -77.03], 'gdp': [38.90, -77.03],
+  'recession': [38.90, -77.03], 'soft landing': [38.90, -77.03], 'hard landing': [38.90, -77.03],
+  'treasury': [38.90, -77.03], 'treasuries': [38.90, -77.03],
+  'yield curve': [38.90, -77.03], '10-year': [38.90, -77.03], '10 year': [38.90, -77.03],
+  'bond yields': [38.90, -77.03], 'treasury yields': [38.90, -77.03],
+  'dollar index': [38.90, -77.03], 'dxy': [38.90, -77.03],
+  'quantitative easing': [38.90, -77.03], 'quantitative tightening': [38.90, -77.03],
+  'balance sheet': [38.90, -77.03], 'reverse repo': [38.90, -77.03],
+  'debt ceiling': [38.90, -77.03],
+  'monetary policy': [38.90, -77.03], 'hawkish': [38.90, -77.03], 'dovish': [38.90, -77.03],
+  'lagarde': [50.11, 8.68], 'christine lagarde': [50.11, 8.68],
+  'bank of england': [51.51, -0.13], 'andrew bailey': [51.51, -0.13],
+  'bank of japan': [35.68, 139.69], 'kazuo ueda': [35.68, 139.69], 'ueda': [35.68, 139.69],
+  'pboc': [39.91, 116.39], "people's bank of china": [39.91, 116.39],
+  'rbi': [28.61, 77.21], 'reserve bank of india': [28.61, 77.21],
+  'bis': [47.56, 7.59], 'bank for international settlements': [47.56, 7.59],
+
+  // Commodities
+  'oil price': [24.69, 46.72], 'crude oil': [24.69, 46.72], 'crude': [24.69, 46.72],
+  'wti': [29.76, -95.37], 'brent': [51.51, -0.13],
+  'gold price': [51.51, -0.13], 'gold': [51.51, -0.13], 'silver price': [51.51, -0.13],
+  'copper': [-33.45, -70.67], 'lithium': [-23.65, -68.13], 'uranium': [-23.65, -68.13],
+  'natural gas': [29.76, -95.37], 'lng': [29.76, -95.37],
+  'wheat': [51.18, 71.45], 'corn': [41.88, -93.09], 'soybean': [-23.55, -46.63], 'soybeans': [-23.55, -46.63],
+  'commodity': [40.71, -74.01], 'commodities': [40.71, -74.01],
+
+  // Mercados / índices
+  's&p 500': [40.71, -74.01], 's&p500': [40.71, -74.01], 'sp500': [40.71, -74.01], 'spx': [40.71, -74.01],
+  'nasdaq': [40.71, -74.01], 'dow jones': [40.71, -74.01],
+  'russell 2000': [40.71, -74.01], 'vix': [40.71, -74.01], 'nyse': [40.71, -74.01],
+  'ftse': [51.51, -0.13], 'ftse 100': [51.51, -0.13],
+  'dax': [52.52, 13.40], 'cac 40': [48.85, 2.35],
+  'nikkei': [35.68, 139.69], 'hang seng': [22.30, 114.17], 'kospi': [37.57, 126.98],
+  'shanghai composite': [31.23, 121.47],
+  'bovespa': [-23.55, -46.63], 'ibovespa': [-23.55, -46.63], 'b3': [-23.55, -46.63],
+  'merval': [-34.61, -58.37],
+  'msci': [40.71, -74.01], 'emerging markets': [40.71, -74.01],
+
+  // Tech / AI
+  'apple': [37.33, -122.03], 'tim cook': [37.33, -122.03], 'iphone': [37.33, -122.03],
+  'google': [37.42, -122.08], 'alphabet': [37.42, -122.08], 'sundar pichai': [37.42, -122.08],
+  'microsoft': [47.61, -122.33], 'satya nadella': [47.61, -122.33],
+  'amazon': [47.61, -122.33], 'andy jassy': [47.61, -122.33], 'aws': [47.61, -122.33],
+  'meta': [37.49, -122.14], 'zuckerberg': [37.49, -122.14], 'mark zuckerberg': [37.49, -122.14],
+  'facebook': [37.49, -122.14], 'instagram': [37.49, -122.14], 'whatsapp': [37.49, -122.14],
+  'nvidia': [37.42, -121.94], 'jensen huang': [37.42, -121.94],
+  'amd': [37.42, -121.94], 'intel': [37.42, -121.94], 'qualcomm': [32.72, -117.16],
+  'tesla': [30.22, -97.75], 'elon musk': [30.22, -97.75], 'musk': [30.22, -97.75],
+  'spacex': [30.22, -97.75], 'starlink': [30.22, -97.75], 'starship': [30.22, -97.75],
+  'openai': [37.77, -122.42], 'sam altman': [37.77, -122.42],
+  'chatgpt': [37.77, -122.42],
+  'anthropic': [37.77, -122.42], 'perplexity': [37.77, -122.42],
+  'mistral': [48.85, 2.35], 'deepseek': [22.54, 114.06],
+  'nasa': [38.90, -77.03], 'artemis': [38.90, -77.03],
+  'tsmc': [25.04, 121.56], 'taiwan semiconductor': [25.04, 121.56],
+  'samsung': [37.57, 126.98], 'sk hynix': [37.57, 126.98],
+  'sony': [35.68, 139.69], 'softbank': [35.68, 139.69], 'masayoshi son': [35.68, 139.69],
+  'alibaba': [30.27, 120.15], 'jack ma': [30.27, 120.15],
+  'tencent': [22.54, 114.06], 'byd': [22.54, 114.06],
+  'xiaomi': [39.91, 116.39], 'huawei': [22.54, 114.06],
+  'nio': [31.23, 121.47], 'xpeng': [22.54, 114.06],
+  'lufthansa': [50.11, 8.68],
+
+  // Wall Street / Bancos globais
+  'jp morgan': [40.71, -74.01], 'jpmorgan': [40.71, -74.01], 'jamie dimon': [40.71, -74.01],
+  'goldman sachs': [40.71, -74.01], 'goldman': [40.71, -74.01],
+  'morgan stanley': [40.71, -74.01],
+  'bank of america': [35.23, -80.84], 'wells fargo': [37.77, -122.42],
+  'citigroup': [40.71, -74.01], 'citibank': [40.71, -74.01],
+  'ubs': [47.38, 8.54], 'credit suisse': [47.38, 8.54],
+  'deutsche bank': [50.11, 8.68], 'barclays': [51.51, -0.13],
+  'hsbc': [51.51, -0.13], 'santander': [40.42, -3.70],
+  'bnp paribas': [48.85, 2.35], 'societe generale': [48.85, 2.35],
+  'nomura': [35.68, 139.69], 'icbc': [39.91, 116.39],
+
+  // EUA — estados/cidades/políticos expandidos
+  'biden': [38.90, -77.03], 'kamala': [38.90, -77.03], 'kamala harris': [38.90, -77.03],
+  'schumer': [38.90, -77.03], 'pelosi': [38.90, -77.03], 'nancy pelosi': [38.90, -77.03],
+  'mike johnson': [38.90, -77.03], 'mitch mcconnell': [38.90, -77.03],
+  'bernie sanders': [38.90, -77.03], 'elizabeth warren': [38.90, -77.03],
+  'vance': [38.90, -77.03], 'jd vance': [38.90, -77.03],
+  'desantis': [30.44, -84.28], 'ron desantis': [30.44, -84.28],
+  'newsom': [38.58, -121.49], 'gavin newsom': [38.58, -121.49],
+  'greg abbott': [30.27, -97.74],
+  'california': [34.05, -118.24], 'texas': [30.27, -97.74], 'florida': [27.99, -81.76],
+  'virginia': [37.54, -77.43], 'ohio': [39.96, -82.99], 'michigan': [42.33, -83.05],
+  'arizona': [33.45, -112.07], 'nevada': [36.17, -115.14], 'colorado': [39.74, -104.99],
+  'oregon': [45.52, -122.68], 'pennsylvania': [40.27, -76.88],
+  'san francisco': [37.77, -122.42], 'los angeles': [34.05, -118.24],
+  'miami': [25.79, -80.19], 'chicago': [41.88, -87.63], 'boston': [42.36, -71.06],
+  'houston': [29.76, -95.37], 'austin': [30.27, -97.74], 'seattle': [47.61, -122.33],
+  'dallas': [32.78, -96.80], 'atlanta': [33.75, -84.39], 'philadelphia': [39.95, -75.17],
+  'americans': [38.90, -77.03],
+
+  // Demonyms adicionais
+  'russian': [55.75, 37.62], 'russians': [55.75, 37.62],
+  'ukrainian': [50.45, 30.52], 'ukrainians': [50.45, 30.52],
+  'polish': [52.23, 21.01], 'poles': [52.23, 21.01],
+  'dutch': [52.37, 4.90],
+  'swedish': [59.33, 18.07], 'norwegian': [59.91, 10.75], 'danish': [55.68, 12.57],
+  'spanish': [40.42, -3.70], 'portuguese': [38.72, -9.14],
+  'belgian': [50.85, 4.35], 'swiss': [46.95, 7.44],
+  'saudi': [24.69, 46.72], 'egyptian': [30.06, 31.25], 'turkish': [39.93, 32.86],
+  'pakistani': [33.72, 73.04], 'afghan': [34.52, 69.18],
+  'vietnamese': [21.03, 105.85], 'thai': [13.76, 100.50], 'malaysian': [3.15, 101.69],
+  'filipino': [14.60, 120.98], 'indonesian': [-6.21, 106.85],
+  'mexican': [19.43, -99.13], 'brazilian': [-15.78, -47.93],
+  'argentine': [-34.61, -58.37], 'argentinian': [-34.61, -58.37],
+  'chilean': [-33.45, -70.67], 'colombian': [4.71, -74.07],
+  'venezuelan': [10.49, -66.88], 'cuban': [23.13, -82.38], 'cubans': [23.13, -82.38],
+  'peruvian': [-12.04, -77.03],
+  'canadian': [45.42, -75.69], 'canadians': [45.42, -75.69],
+  'nigerian': [9.07, 7.40], 'kenyan': [-1.29, 36.82], 'moroccan': [34.01, -6.85],
+  'ethiopian': [9.03, 38.74], 'sudanese': [15.55, 32.53],
+  'south african': [-25.75, 28.19],
+  'european': [50.85, 4.35], 'eurozone': [50.11, 8.68], 'euro area': [50.11, 8.68],
+
+  // Brasil / Argentina / Chile / México / Colômbia — expansão
+  'cfk': [-34.61, -58.37], 'cristina kirchner': [-34.61, -58.37], 'kirchner': [-34.61, -58.37],
+  'massa': [-34.61, -58.37], 'caputo': [-34.61, -58.37], 'luis caputo': [-34.61, -58.37],
+  'bullrich': [-34.61, -58.37], 'villarruel': [-34.61, -58.37], 'adorni': [-34.61, -58.37],
+  'haddad': [-15.78, -47.93], 'fernando haddad': [-15.78, -47.93],
+  'galipolo': [-15.78, -47.93], 'campos neto': [-15.78, -47.93],
+  'bolsonaro': [-15.78, -47.93], 'moraes': [-15.78, -47.93], 'alexandre de moraes': [-15.78, -47.93],
+  'petrobras': [-22.91, -43.17],
+  'itau': [-23.55, -46.63], 'itaú': [-23.55, -46.63], 'bradesco': [-23.55, -46.63], 'nubank': [-23.55, -46.63],
+  'copom': [-15.78, -47.93], 'selic': [-15.78, -47.93], 'stf': [-15.78, -47.93],
+  'pemex': [19.43, -99.13], 'amlo': [19.43, -99.13],
+  'boric': [-33.45, -70.67], 'codelco': [-33.45, -70.67],
+  'gustavo petro': [4.71, -74.07],
+
+  // Geopolítica — conflitos, organismos, tratados
+  'drone strike': [50.45, 30.52], 'drone strikes': [50.45, 30.52],
+  'missile strike': [31.77, 35.22], 'airstrike': [33.51, 36.29],
+  'ceasefire': [32.08, 34.78], 'cease fire': [32.08, 34.78],
+  'coup': [13.51, 2.12], 'junta': [13.51, 2.12],
+  'embargo': [38.90, -77.03], 'trade war': [38.90, -77.03], 'trade deal': [38.90, -77.03],
+  'tariffs': [38.90, -77.03], 'usmca': [19.43, -99.13], 'wto': [46.21, 6.14],
+  'summit': [50.85, 4.35], 'g7 summit': [51.51, -0.13], 'g20 summit': [-15.78, -47.93],
+  'united nations': [40.75, -73.98], 'security council': [40.75, -73.98],
+  'donbas': [49.84, 36.23], 'kharkiv': [49.99, 36.23], 'odesa': [46.48, 30.73], 'odessa': [46.48, 30.73],
+  'mariupol': [47.10, 37.55], 'crimea': [45.03, 34.10], 'odesa': [48.00, 31.00], 'odessa': [48.00, 31.00],
+  'belarus': [53.90, 27.57], 'lukashenko': [53.90, 27.57], 'minsk': [53.90, 27.57],
+  'sahel': [13.51, 2.12], 'tigray': [13.50, 38.45],
+  'hormuz': [27.20, 56.30], 'strait of hormuz': [27.20, 56.30],
+  'red sea': [15.55, 44.21], 'bab el mandeb': [15.55, 44.21], 'suez canal': [30.06, 31.25],
+  'south china sea': [22.54, 114.06], 'taiwan strait': [25.04, 121.56],
+  'korean peninsula': [37.57, 126.98], 'kashmir': [34.08, 74.80],
+  'nasrallah': [33.89, 35.50], 'sinwar': [32.08, 34.78], 'yahya sinwar': [32.08, 34.78],
+  'houthis': [15.55, 44.21],
+
+  // Termos legados (manter compatibilidade)
   'imf': [38.90, -77.03], 'world bank': [38.90, -77.03], 'g7': [51.51, -0.13],
   'g20': [-15.78, -47.93], 'brics': [-15.78, -47.93], 'opec': [24.69, 46.72],
-  'fed ': [38.90, -77.03], 'tariff': [38.90, -77.03], 'sanctions': [38.90, -77.03],
+  'tariff': [38.90, -77.03], 'sanctions': [38.90, -77.03],
+
+  // Variações acentuadas / não-inglês (captura de títulos ES/PT)
+  'irán': [35.69, 51.39], 'ormuz': [27.20, 56.30],
+  'estados unidos': [38.90, -77.03], 'eua': [38.90, -77.03],
+  'méxico': [19.43, -99.13], 'teotihuacán': [19.69, -98.84],
+  'unión europea': [50.85, 4.35], 'união europeia': [50.85, 4.35], 'europea': [50.85, 4.35],
+  'reino unido': [51.51, -0.13], 'alemania': [52.52, 13.40], 'alemanha': [52.52, 13.40],
+  'españa': [40.42, -3.70], 'espanha': [40.42, -3.70],
+  'china': [39.91, 116.39],
+  'tajani': [41.90, 12.49], 'mandelson': [51.51, -0.13],
+  'nasrallah': [33.89, 35.50],
 };
 
 // Sort longest-first to avoid 'iran' matching inside 'ukraine'
@@ -966,7 +1237,35 @@ function geoFromText(text) {
   return null;
 }
 
-const WORKER_URL = 'https://wesearch-news.wesearch.workers.dev';
+const WORKER_URL = CFG.WORKER_URL;
+
+// Tier interno por qualidade/relevância editorial. Limita quantas notícias cada
+// fonte contribui ao globo para evitar dominância de fontes prolíficas.
+const SOURCE_TIER = {
+  // T1 — cripto-native + research
+  'Decrypt': 1, 'CoinDesk': 1, 'CoinTelegraph': 1, 'The Block': 1,
+  'Bankless': 1, 'The Defiant': 1, 'Blockworks': 1,
+  // T1 — geopolítica/conflito
+  'Ukrinform': 1, 'Jerusalem Post': 1, 'Deutsche Welle': 1, 'SCMP': 1,
+  // T1 — mainstream global premium
+  'BBC': 1, 'The Guardian': 1, 'France 24': 1, 'The Hindu': 1,
+  'Reuters': 1, 'Al Jazeera': 1, 'Bloomberg': 1, 'Nikkei Asia': 1,
+  // T1 — geopolítica analítica + tech
+  'Foreign Policy': 1, 'Politico': 1, 'The Verge': 1, 'TechCrunch': 1,
+  // T1 — Rússia primária
+  'Moscow Times': 1,
+  // T2 — regional relevante
+  'G1 Globo': 2, 'La Nación': 2, 'ANSA': 2, 'Notes from Poland': 2,
+  'Dawn': 2, 'Taipei Times': 2, 'CBC News': 2, 'CNA': 2,
+  // T2 — analítico complementar
+  'Foreign Affairs': 2, 'Axios': 2, 'Al-Monitor': 2, 'Middle East Eye': 2,
+  'Meduza': 2, 'AllAfrica': 2, 'Ars Technica': 2, 'MIT Technology Review': 2,
+  // T3 — diversidade geográfica + macro agregador
+  'El Universal': 3, 'The Punch': 3, 'ABC Australia': 3, 'DutchNews': 3,
+  'Rappler': 3, 'Bangkok Post': 3, 'Morocco World News': 3,
+  'Investing.com': 3, 'Crisis Group': 3,
+};
+const TIER_CAP = { 1: 25, 2: 10, 3: 5 };
 
 // Keyword classifiers — ordem importa: cripto > geo > macro
 const CRIPTO_KW = ['bitcoin','ethereum','crypto','blockchain','defi','nft','web3','btc','eth','solana','binance','coinbase','altcoin','stablecoin','token','halving','dex','on-chain','onchain'];
@@ -985,15 +1284,15 @@ function classifyTitle(title, sourceCategory) {
 // Estado dos filtros activos
 let _filterTime    = 'all';
 let _filterCat     = 'all';
-let _filterSources = new Set(); // vazio = todas activas
+let _blockedSources = new Set(); // blocklist: fontes desactivadas. Vazio = todas activas.
 let _allEventos    = [];
 
 function applyFilters() {
   const now   = Date.now();
-  const limit = _filterTime === '24h' ? 86400000 : _filterTime === '7d' ? 604800000 : Infinity;
+  const limit = _filterTime === '24h' ? CFG.FILTER_24H_MS : _filterTime === '7d' ? CFG.FILTER_7D_MS : Infinity;
   EVENTOS = _allEventos.filter(ev => {
     if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
-    if (_filterSources.size > 0 && !_filterSources.has(ev.source)) return false;
+    if (_blockedSources.has(ev.source)) return false;
     if (limit < Infinity && ev.publishedAt) {
       if (now - new Date(ev.publishedAt).getTime() > limit) return false;
     }
@@ -1004,14 +1303,10 @@ function applyFilters() {
   if (gsEl) gsEl.textContent = String(EVENTOS.length).padStart(2,'0');
 }
 
-function rebuildSourceButtons() {
-  const container = document.getElementById('filter-source');
-  const group     = document.getElementById('filter-source-group');
-  if (!container || !group) return;
-
+function _getVisibleSources() {
   // Fontes presentes após filtros de tempo+categoria (ignora filtro de fonte)
   const now   = Date.now();
-  const limit = _filterTime === '24h' ? 86400000 : _filterTime === '7d' ? 604800000 : Infinity;
+  const limit = _filterTime === '24h' ? CFG.FILTER_24H_MS : _filterTime === '7d' ? CFG.FILTER_7D_MS : Infinity;
   const visible = _allEventos.filter(ev => {
     if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
     if (limit < Infinity && ev.publishedAt) {
@@ -1019,15 +1314,67 @@ function rebuildSourceButtons() {
     }
     return true;
   });
+  return [...new Set(visible.map(ev => ev.source))].sort();
+}
 
-  const sources = [...new Set(visible.map(ev => ev.source))].sort();
+function _updateSourceTrigger(sources) {
+  const group = document.getElementById('filter-source-group');
+  const label = document.getElementById('filter-source-label');
+  if (!group || !label) return;
+
   if (sources.length === 0) { group.style.display = 'none'; return; }
   group.style.display = '';
 
-  container.innerHTML = sources.map(s => {
-    const active = _filterSources.size === 0 || _filterSources.has(s);
-    return `<button class="gf-btn ${active ? 'active' : 'inactive'}" data-source="${s}">${s}</button>`;
+  const activeCount = sources.filter(s => !_blockedSources.has(s)).length;
+  const total = sources.length;
+  label.textContent = activeCount === total
+    ? `Todas (${total})`
+    : activeCount === 0
+      ? `Nenhuma`
+      : `${activeCount} de ${total}`;
+}
+
+function rebuildSourcePopup() {
+  const sources = _getVisibleSources();
+  _updateSourceTrigger(sources);
+
+  const list  = document.getElementById('filter-source');
+  const count = document.getElementById('filter-source-count');
+  if (!list) return;
+
+  if (sources.length === 0) { list.innerHTML = ''; if (count) count.textContent = '—'; return; }
+
+  const activeCount = sources.filter(s => !_blockedSources.has(s)).length;
+  if (count) count.textContent = `${activeCount} / ${sources.length}`;
+
+  list.innerHTML = sources.map(s => {
+    const active = !_blockedSources.has(s);
+    return `<label class="gf-source-row${active ? ' active' : ''}">
+      <input type="checkbox" data-source="${esc(s)}"${active ? ' checked' : ''}>
+      <span>${esc(s)}</span>
+    </label>`;
   }).join('');
+}
+
+function _openSourceModal() {
+  const modal   = document.getElementById('source-modal');
+  const trigger = document.getElementById('filter-source-trigger');
+  if (!modal) return;
+  rebuildSourcePopup();
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+}
+
+function _closeSourceModal() {
+  const modal   = document.getElementById('source-modal');
+  const trigger = document.getElementById('filter-source-trigger');
+  if (!modal) return;
+  modal.hidden = true;
+  modal.setAttribute('aria-hidden', 'true');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
 }
 
 function setupGlobeFilters() {
@@ -1037,8 +1384,8 @@ function setupGlobeFilters() {
     document.querySelectorAll('#filter-time .gf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _filterTime = btn.dataset.val;
-    _filterSources.clear();
-    rebuildSourceButtons();
+    _blockedSources.clear();
+    rebuildSourcePopup();
     applyFilters();
   });
 
@@ -1048,35 +1395,40 @@ function setupGlobeFilters() {
     document.querySelectorAll('#filter-cat .gf-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     _filterCat = btn.dataset.val;
-    _filterSources.clear();
-    rebuildSourceButtons();
+    _blockedSources.clear();
+    rebuildSourcePopup();
     applyFilters();
   });
 
-  document.getElementById('filter-source')?.addEventListener('click', e => {
-    const btn = e.target.closest('.gf-btn');
-    if (!btn) return;
-    const src = btn.dataset.source;
-
-    // Primeiro clique numa fonte: activa só essa (desactiva todas as outras)
-    // Clique numa já activa (e é a única): volta a activar todas
-    if (_filterSources.size === 0) {
-      // todas activas → activa só esta
-      const all = [...document.querySelectorAll('#filter-source .gf-btn')].map(b => b.dataset.source);
-      all.forEach(s => _filterSources.add(s));
-      _filterSources.delete(src);
-    } else if (_filterSources.has(src)) {
-      _filterSources.delete(src);
-      if (_filterSources.size === 0) _filterSources.clear(); // todas activas de novo
-    } else {
-      _filterSources.add(src);
+  document.getElementById('filter-source-trigger')?.addEventListener('click', _openSourceModal);
+  document.getElementById('source-modal-close')?.addEventListener('click', _closeSourceModal);
+  document.getElementById('source-modal-backdrop')?.addEventListener('click', _closeSourceModal);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('source-modal');
+      if (modal && !modal.hidden) _closeSourceModal();
     }
+  });
 
-    // Se todas activas, limpa o set
-    const total = document.querySelectorAll('#filter-source .gf-btn').length;
-    if (_filterSources.size >= total) _filterSources.clear();
+  document.getElementById('filter-source-all')?.addEventListener('click', () => {
+    _blockedSources.clear();
+    rebuildSourcePopup();
+    applyFilters();
+  });
 
-    rebuildSourceButtons();
+  document.getElementById('filter-source-none')?.addEventListener('click', () => {
+    _getVisibleSources().forEach(s => _blockedSources.add(s));
+    rebuildSourcePopup();
+    applyFilters();
+  });
+
+  document.getElementById('filter-source')?.addEventListener('change', e => {
+    const input = e.target.closest('input[type="checkbox"][data-source]');
+    if (!input) return;
+    const src = input.dataset.source;
+    if (input.checked) _blockedSources.delete(src);
+    else _blockedSources.add(src);
+    rebuildSourcePopup();
     applyFilters();
   });
 }
@@ -1090,7 +1442,6 @@ async function fetchGlobeNews() {
     if (seen.has(dedup)) return;
 
     let geo = geoFromText(title);
-    if (!geo && countryCode) geo = geoFromISO(countryCode);
     if (!geo) return;
 
     const { lat, lon, tag, country } = geo;
@@ -1114,15 +1465,54 @@ async function fetchGlobeNews() {
     });
   }
 
-  try {
-    const data = await fetch(WORKER_URL).then(r => r.json());
-    const articles = data.articles || [];
+  const LS_KEY = 'wesearch:globe:v1';
+  const LS_TTL = 48 * 60 * 60 * 1000; // 48h — artigos antigos ainda servem como seed visual
+
+  function processArticles(rawArticles, source) {
+    const bySource = new Map();
+    for (const a of rawArticles) {
+      if (!a?.source) continue;
+      if (!bySource.has(a.source)) bySource.set(a.source, []);
+      bySource.get(a.source).push(a);
+    }
+    const articles = [];
+    for (const [, group] of bySource) {
+      const tier = SOURCE_TIER[group[0].source] ?? 3;
+      const cap = TIER_CAP[tier] ?? 5;
+      group.sort((x, y) => new Date(y.publishedAt || 0) - new Date(x.publishedAt || 0));
+      for (const a of group.slice(0, cap)) articles.push(a);
+    }
     for (const item of articles) {
       const id = item.source.replace(/\W/g, '') + '-' + item.title.slice(0, 20).replace(/\W/g, '');
       addArticle(id, item.title, item.url, item.source, item.countryCode, item.publishedAt, item.category);
     }
-    console.info(`[globe] recebidos: ${articles.length} | no globo: ${results.length}`);
-  } catch(e) { console.warn('[globe] worker indisponível', e); }
+    console.info(`[globe/${source}] recebidos: ${rawArticles.length} | após tier-cap: ${articles.length} | no globo: ${results.length}`);
+  }
+
+  let fetched = false;
+  try {
+    const data = await fetch(WORKER_URL).then(r => r.json());
+    const rawArticles = data.articles || [];
+    if (rawArticles.length) {
+      processArticles(rawArticles, 'worker');
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({ t: Date.now(), articles: rawArticles }));
+      } catch {}
+      fetched = true;
+    }
+  } catch (e) { console.warn('[globe] worker indisponível', e); }
+
+  if (!fetched) {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached && Array.isArray(cached.articles) && Date.now() - (cached.t || 0) < LS_TTL) {
+          processArticles(cached.articles, 'cache');
+        }
+      }
+    } catch (e) { console.warn('[globe] cache local indisponível', e); }
+  }
 
   if (results.length === 0) return; // keep static markers as fallback
 
@@ -1130,7 +1520,7 @@ async function fetchGlobeNews() {
   if (window._globe?.geoTagArticles) window._globe.geoTagArticles(results);
 
   _allEventos = results;
-  rebuildSourceButtons();
+  rebuildSourcePopup();
   applyFilters();
 
   // Update stats
@@ -1147,7 +1537,7 @@ async function fetchGlobeNews() {
 ========================================================== */
 loadAll()
   .then(() => fetchGlobeNews())
-  .then(() => setInterval(fetchGlobeNews, 5 * 60 * 1000))
+  .then(() => setInterval(fetchGlobeNews, CFG.GLOBE_REFRESH_MS))
   .catch(err => console.error(err));
 
 // Pause stream animations when hero is off-screen
@@ -1286,48 +1676,11 @@ function renderTickerRow(changedKeys = new Set()) {
 }
 
 // ---- Data fetchers ----
-async function fetchBinance() {
-  try {
-    const symbols = TICKER_ORDER.filter(x => x.src === 'binance').map(x => x.key);
-    const url = 'https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(symbols));
-    const r = await fetch(url, { cache: 'no-store' });
-    if (!r.ok) throw new Error('binance status ' + r.status);
-    const data = await r.json();
-    for (const d of data) {
-      if (tickerState[d.symbol]) {
-        tickerState[d.symbol].value = parseFloat(d.lastPrice);
-        tickerState[d.symbol].change = parseFloat(d.priceChangePercent);
-      }
-    }
-  } catch (err) {
-    console.warn('[ticker] binance failed, using seeds', err);
-    // Seed fallback with tiny drift
-    for (const sym of Object.keys(BINANCE_SEED)) {
-      if (tickerState[sym].value == null) {
-        tickerState[sym].value = BINANCE_SEED[sym] * (1 + (Math.random()-0.5)*0.02);
-        tickerState[sym].change = (Math.random()-0.5) * 4;
-      }
-    }
-  }
-}
-
-async function fetchFearGreed() {
-  try {
-    const r = await fetch('https://api.alternative.me/fng/?limit=1', { cache: 'no-store' });
-    if (!r.ok) throw new Error('fng status ' + r.status);
-    const j = await r.json();
-    const v = parseInt(j.data[0].value, 10);
-    tickerState.FNG.value = v;
-  } catch (err) {
-    console.warn('[ticker] fng failed', err);
-    if (tickerState.FNG.value == null) tickerState.FNG.value = 71;
-  }
-}
-
-/* Seed apenas para Finnhub (índices EUA) — Brapi agora é real */
+// Bundle /ticker: 1 request substitui binance + fng + fx + 6 quotes. KV compartilhado entre visitantes.
+/* Seed pra Finnhub (sem API) e Brapi (fallback se upstream falhar). */
 function seedMocks() {
   for (const row of TICKER_ORDER) {
-    if (row.src === 'finnhub' && tickerState[row.key].value == null) {
+    if ((row.src === 'finnhub' || row.src === 'brapi') && row.seed && tickerState[row.key].value == null) {
       tickerState[row.key].value = row.seed;
       tickerState[row.key].change = (Math.random() - 0.4) * 1.8;
     }
@@ -1346,40 +1699,56 @@ function driftMocks() {
   }
 }
 
-async function fetchBrapi() {
-
-  // Plano free: 1 ativo por request — fetch em paralelo
-  const tickers = ['^BVSP', 'PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'BBAS3'];
-  await Promise.allSettled(tickers.map(async ticker => {
-    try {
-      const data = await fetch(`https://wesearch-news.wesearch.workers.dev/quote?symbol=${encodeURIComponent(ticker)}`)
-        .then(r => r.json());
-      const r = (data.results || [])[0];
-      if (r && tickerState[r.symbol] !== undefined) {
-        tickerState[r.symbol].value  = r.regularMarketPrice;
-        tickerState[r.symbol].change = r.regularMarketChangePercent;
-      }
-    } catch(err) { console.warn(`[ticker] brapi ${ticker} failed`, err); }
-  }));
-
-  try {
-    // USD/BRL via AwesomeAPI (gratuito, CORS aberto)
-    const data = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL')
-      .then(r => r.json());
-    const rate = data.USDBRL;
-    if (rate) {
-      tickerState['USD-BRL'].value  = parseFloat(rate.bid);
-      tickerState['USD-BRL'].change = parseFloat(rate.pctChange);
+function applyTickerBundle(bundle) {
+  // Binance
+  for (const d of (bundle.binance || [])) {
+    if (tickerState[d.symbol]) {
+      tickerState[d.symbol].value = parseFloat(d.lastPrice);
+      tickerState[d.symbol].change = parseFloat(d.priceChangePercent);
     }
-  } catch(err) { console.warn('[ticker] awesomeapi currency failed', err); }
+  }
+  // Fear & Greed
+  const fngVal = parseInt(bundle.fng?.data?.[0]?.value, 10);
+  if (!Number.isNaN(fngVal)) tickerState.FNG.value = fngVal;
+  // Brapi quotes
+  for (const q of (bundle.quotes || [])) {
+    const r = (q.results || [])[0];
+    if (r && tickerState[r.symbol] !== undefined) {
+      tickerState[r.symbol].value  = r.regularMarketPrice;
+      tickerState[r.symbol].change = r.regularMarketChangePercent;
+    }
+  }
+  // USD-BRL
+  const rate = bundle.fx?.USDBRL;
+  if (rate) {
+    tickerState['USD-BRL'].value  = parseFloat(rate.bid);
+    tickerState['USD-BRL'].change = parseFloat(rate.pctChange);
+  }
+}
+
+async function fetchTicker() {
+  try {
+    const r = await fetch(`${CFG.WORKER_URL}/ticker`);
+    if (!r.ok) throw new Error('ticker status ' + r.status);
+    const bundle = await r.json();
+    applyTickerBundle(bundle);
+  } catch (err) {
+    console.warn('[ticker] bundle failed, keeping seeds/last known', err);
+    for (const sym of Object.keys(BINANCE_SEED)) {
+      if (tickerState[sym].value == null) {
+        tickerState[sym].value = BINANCE_SEED[sym] * (1 + (Math.random()-0.5)*0.02);
+        tickerState[sym].change = (Math.random()-0.5) * 4;
+      }
+    }
+    if (tickerState.FNG.value == null) tickerState.FNG.value = 71;
+  }
 }
 
 async function refreshTicker() {
-  // Snapshot antes de buscar
   const snapshot = {};
   for (const row of TICKER_ORDER) snapshot[row.key] = tickerState[row.key].value;
 
-  await Promise.all([fetchBinance(), fetchFearGreed(), fetchBrapi()]);
+  await fetchTicker();
   driftMocks();
 
   // Detecta quais mudaram
@@ -1397,4 +1766,4 @@ async function refreshTicker() {
 seedMocks();
 renderTickerRow();           // skeletons + mock seeds
 refreshTicker();             // live fetch
-setInterval(refreshTicker, 30000);  // 30s
+setInterval(refreshTicker, CFG.TICKER_REFRESH_MS);
