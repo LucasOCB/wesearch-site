@@ -1486,7 +1486,6 @@ async function fetchGlobeNews() {
       const id = item.source.replace(/\W/g, '') + '-' + item.title.slice(0, 20).replace(/\W/g, '');
       addArticle(id, item.title, item.url, item.source, item.countryCode, item.publishedAt, item.category);
     }
-    console.info(`[globe/${source}] recebidos: ${rawArticles.length} | após tier-cap: ${articles.length} | no globo: ${results.length}`);
   }
 
   let fetched = false;
