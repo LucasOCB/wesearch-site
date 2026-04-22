@@ -1352,6 +1352,10 @@ const nav = document.getElementById('nav');
 /* ==========================================================
    ARTICLES CAROUSEL
 ========================================================== */
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 const THUMB_PALETTES = [
   ['#FF5500','#0a0a0a','#1a1a1a'],
   ['#B23C00','#0a0a0a','#141414'],
@@ -1794,9 +1798,7 @@ async function setupGlobe() {
   const panelList       = document.getElementById('cp-list');
   const panelClose      = document.getElementById('cp-close');
 
-  function esc(s) {
-    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+
 
   function openCountryPanel(tag, displayName) {
     const items = EVENTOS.filter(e => e.tag === tag || (e.country||'').toLowerCase() === (tag||'').toLowerCase());
