@@ -43,8 +43,8 @@ function extractFirstImg(html) {
 }
 
 function safeUrl(u) {
-  if (!u) return '#';
-  return /^https?:\/\//i.test(u) ? u : '#';
+  if (!u || !/^https?:\/\//i.test(u)) return '#';
+  return u.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 async function fetchArtigosSubstack() {
