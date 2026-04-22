@@ -101,6 +101,8 @@ def parse_posts(posts: list) -> list[dict]:
         tags = post.get("postTags") or post.get("tags") or []
         category = resolve_category(tags)
 
+        thumbnail = post.get("cover_image") or None
+
         artigos.append({
             "n": f"{i:02d}",
             "date": format_date_pt(pub_date),
@@ -109,6 +111,7 @@ def parse_posts(posts: list) -> list[dict]:
             "author": author,
             "category": category,
             "url": url,
+            "thumbnail": thumbnail,
         })
 
     return artigos
