@@ -1,10 +1,16 @@
 [
-  { "id": "victor-alfa", "name": "Victor Alfa", "initials": "VA", "specialty": "Diretor de Research", "substackUrl": "https://www.linkedin.com/in/victor-alfa-512156218/", "photoUrl": null, "bio": null },
-  { "id": "bruno-liman", "name": "Bruno Liman", "initials": "BL", "specialty": "Analista On-Chain", "substackUrl": "https://www.linkedin.com/in/brunoliman/", "photoUrl": null, "bio": null },
-  { "id": "0xcokinha", "name": "0xCokinha", "initials": "0x", "specialty": "Analista Fundamentalista", "substackUrl": "https://www.linkedin.com/in/0xcokinha/", "photoUrl": null, "bio": null },
-  { "id": "rafael-puerari", "name": "Rafael Puerari", "initials": "RP", "specialty": "Analista Fundamentalista", "substackUrl": "https://www.linkedin.com/in/rafael-puerari-02721165/", "photoUrl": null, "bio": null },
-  { "id": "danillo-uliana", "name": "Danillo Uliana", "initials": "DU", "specialty": "Analista Macroeconomia", "substackUrl": "https://www.linkedin.com/in/danillouliana/", "photoUrl": null, "bio": null },
-  { "id": "andreia-martinbr", "name": "Andreia MartinBR", "initials": "AM", "specialty": "Analista em Sociologia Econômica", "substackUrl": "https://www.linkedin.com/in/andreiamartinbr/", "photoUrl": null, "bio": null },
-  { "id": "antonio-visentini", "name": "Antonio Carlos Visentini", "initials": "AV", "specialty": "Analista Fundamentalista", "substackUrl": "https://www.linkedin.com/in/antonio-visentini297666/", "photoUrl": null, "bio": null },
-  { "id": "joao-paulo-santanna", "name": "João Paulo Sant'Anna", "initials": "JP", "specialty": "Analista Quantitativo", "substackUrl": "https://www.linkedin.com/in/joaopaulosantannapereira/", "photoUrl": null, "bio": null }
+  { "id": "victor-alfa", "name": "Victor Alfa", "initials": "VA", "substackUrl": "https://www.linkedin.com/in/victor-alfa-512156218/", "photoUrl": "assets/analysts/victor-alfa.png", "bio": null },
+  { "id": "bruno-liman", "name": "Bruno Liman", "initials": "BL", "substackUrl": "https://www.linkedin.com/in/brunoliman/", "photoUrl": "assets/analysts/bruno-liman.png", "bio": null },
+  { "id": "0xcokinha", "name": "0xCokinha", "initials": "0x", "substackUrl": "https://www.linkedin.com/in/0xcokinha/", "photoUrl": "assets/analysts/0xcokinha.png", "bio": null },
+  { "id": "rafael-puerari", "name": "Rafael Puerari", "initials": "RP", "substackUrl": "https://www.linkedin.com/in/rafael-puerari-02721165/", "photoUrl": "assets/analysts/rafael-puerari.png", "bio": null },
+  { "id": "danillo-uliana", "name": "Danillo Uliana", "initials": "DU", "substackUrl": "https://www.linkedin.com/in/danillouliana/", "photoUrl": "assets/analysts/danillo-uliana.png", "bio": null },
+  { "id": "andreia-martinbr", "name": "Andreia MartinBR", "initials": "AM", "substackUrl": "https://www.linkedin.com/in/andreiamartinbr/", "photoUrl": "assets/analysts/andreia-martinbr.png", "bio": null },
+  { "id": "antonio-visentini", "name": "Antonio Carlos Visentini", "initials": "AV", "substackUrl": "https://www.linkedin.com/in/antonio-visentini297666/", "photoUrl": "assets/analysts/antonio-visentini.png", "bio": null },
+  { "id": "joao-paulo-santanna", "name": "João Paulo Sant'Anna", "initials": "JP", "substackUrl": "https://www.linkedin.com/in/joaopaulosantannapereira/", "photoUrl": "assets/analysts/joao-paulo-santanna.png", "bio": null },
+  { "id": "l0ck", "name": "L0ck", "initials": "L0", "substackUrl": "https://www.linkedin.com/in/lucasocbarros/", "photoUrl": "assets/analysts/l0ck.png", "bio": null },
+  { "id": "lucca-benedetti", "name": "Lucca Benedetti", "initials": "LB", "substackUrl": "https://www.linkedin.com/in/lucca-benedetti/", "photoUrl": "assets/analysts/lucca-benedetti.png", "bio": null },
+  { "id": "bernad-pedra", "name": "Bernad Pedra", "initials": "BP", "substackUrl": null, "photoUrl": null, "bio": null },
+  { "id": "yuri-gubert", "name": "Yuri Gubert", "initials": "YG", "substackUrl": "https://www.linkedin.com/in/yuri-gubert/", "photoUrl": null, "bio": null },
+  { "id": "carlos-cordeiro", "name": "Carlos Cordeiro", "initials": "CC", "substackUrl": null, "photoUrl": "assets/analysts/carlos-cordeiro.png", "bio": null },
+  { "id": "ney-neto", "name": "Ney Neto", "initials": "NN", "substackUrl": "https://www.linkedin.com/in/neyneto/", "photoUrl": null, "bio": null }
 ]

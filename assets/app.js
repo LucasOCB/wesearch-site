@@ -12,11 +12,12 @@ const cfg = {
 // Magic numbers nomeados (setInterval/setTimeout/filtros de tempo).
 const CFG = {
   WORKER_URL: 'https://wesearch-news.wesearch.workers.dev',
-  GLOBE_REFRESH_MS: 5 * 60 * 1000,       // intervalo do fetch do globo
-  TICKER_REFRESH_MS: 120 * 1000,         // intervalo do ticker de mercado (120s p/ ficar dentro do free tier)
+  GLOBE_REFRESH_MS: 10 * 60 * 1000,      // 10min — alinhado com Cache-Control do Worker /globe
+  TICKER_REFRESH_MS: 5 * 60 * 1000,      // 5min — alinhado com Cache-Control do /ticker
   DRAG_RESUME_MS: 250,                   // delay pra retomar auto-rotate após drag
   FILTER_24H_MS: 24 * 60 * 60 * 1000,
   FILTER_7D_MS:  7 * 24 * 60 * 60 * 1000,
+  FILTER_30D_MS: 30 * 24 * 60 * 60 * 1000, // teto absoluto: "Tudo" = últimos 30d
 };
 
 /* ==========================================================
@@ -47,6 +48,19 @@ function safeUrl(u) {
   return u.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+function safeLocalAsset(u) {
+  if (!u || typeof u !== 'string') return null;
+  if (!/^assets\/[a-z0-9/_-]+\.(png|jpg|jpeg|webp|svg)$/i.test(u)) return null;
+  return u.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function decodeEntities(s) {
+  if (!s) return '';
+  const t = document.createElement('textarea');
+  t.innerHTML = s;
+  return t.value;
+}
+
 async function fetchArtigosSubstack() {
   const url = `${CFG.WORKER_URL}/substack`;
   try {
@@ -57,13 +71,13 @@ async function fetchArtigosSubstack() {
       const date = `${String(d.getDate()).padStart(2,'0')} ${MONTHS_PT[d.getMonth()]} ${d.getFullYear()}`;
       const cats = (item.categories || []).map(c => c.toLowerCase().trim());
       const category = cats.map(c => CATEGORY_MAP[c]).find(Boolean) || 'RESEARCH';
-      const excerpt = item.description
+      const excerpt = decodeEntities(item.description)
         .replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,120)
         .replace(/\s\S*$/, '') + '.';
-      const author = (item.author || '').replace(/\s*-.*$/, '').trim().toUpperCase();
+      const author = decodeEntities(item.author || '').replace(/\s*-.*$/, '').trim().toUpperCase();
       return {
-        n: String(i+1).padStart(2,'0'), date, title: item.title,
-        excerpt, author, category, url: item.link,
+        n: String(i+1).padStart(2,'0'), date, title: decodeEntities(item.title), category, url: item.link,
+        excerpt, author,
         thumbnail: item.thumbnail || extractFirstImg(item.content) || extractFirstImg(item.description) || null
       };
     });
@@ -231,23 +245,34 @@ function renderArticles() {
 ========================================================== */
 function renderAnalysts() {
   const container = document.getElementById('carousel-analysts');
-  container.innerHTML = ANALISTAS.map((an, i) => `
-    <a class="analyst" href="${safeUrl(an.substackUrl)}" target="_blank" rel="noopener">
+  container.innerHTML = ANALISTAS.map((an, i) => {
+    const hasLink = !!an.substackUrl;
+    const tag = hasLink ? 'a' : 'div';
+    const attrs = hasLink
+      ? `href="${safeUrl(an.substackUrl)}" target="_blank" rel="noopener"`
+      : 'aria-disabled="true"';
+    const photoSafe = safeLocalAsset(an.photoUrl);
+    const portrait = photoSafe
+      ? `<img class="portrait" src="${photoSafe}" alt="${esc(an.name)}" loading="lazy" decoding="async">`
+      : `<span class="initials">${esc(an.initials)}</span>`;
+    const footer = hasLink
+      ? `<span>LinkedIn</span><span class="arr">↗</span>`
+      : `<span>Em breve</span><span class="arr">—</span>`;
+    return `
+    <${tag} class="analyst${hasLink ? '' : ' is-disabled'}" ${attrs}>
       <div class="frame">
         <span class="tag">№ ${String(i+1).padStart(2,'0')}</span>
         <span class="ticks"></span>
-        <span class="initials">${esc(an.initials)}</span>
+        ${portrait}
       </div>
       <div>
         <div class="name">${esc(an.name)}</div>
-        <div class="spec">${esc(an.specialty)}</div>
       </div>
       <div class="go">
-        <span>LinkedIn</span>
-        <span class="arr">↗</span>
+        ${footer}
       </div>
-    </a>
-  `).join('');
+    </${tag}>`;
+  }).join('');
 
   setupCarousel(container, document.getElementById('an-prev'), document.getElementById('an-next'), document.getElementById('an-bar'));
 }
@@ -1193,15 +1218,38 @@ const ISO_COORDS = {
   'DZ':[36.74,3.06],'TN':[36.82,10.17],'KZ':[51.18,71.45],'BD':[23.72,90.41],
 };
 
+// ISO-2 → tag canônico (bate com featureToTag do TopoJSON, pra que click no país agrupe certo)
+const ISO_TO_CANONICAL_TAG = {
+  US:'united states', GB:'united kingdom', FR:'france', DE:'germany',
+  BR:'brazil', JP:'japan', IN:'india', AU:'australia', CA:'canada',
+  RU:'russia', CN:'china', ZA:'south africa', NG:'nigeria',
+  EG:'egypt', MX:'mexico', AR:'argentina', KR:'south korea',
+  KP:'north korea', ID:'indonesia', SA:'saudi arabia', TR:'turkey',
+  IL:'israel', UA:'ukraine', PL:'poland', NL:'netherlands',
+  ES:'spain', IT:'italy', PT:'portugal', SE:'sweden', NO:'norway',
+  CH:'switzerland', BE:'belgium', PK:'pakistan', AF:'afghanistan',
+  IQ:'iraq', IR:'iran', SY:'syria', LB:'lebanon', YE:'yemen',
+  QA:'qatar', AE:'uae', KE:'kenya', ET:'ethiopia', MA:'morocco',
+  GH:'ghana', SD:'sudan', TW:'taiwan', HK:'hong kong', SG:'singapore',
+  MY:'malaysia', PH:'philippines', VN:'vietnam', TH:'thailand',
+  NZ:'new zealand', CL:'chile', CO:'colombia', PE:'peru', VE:'venezuela',
+  GR:'greece', HU:'hungary', RO:'romania', CZ:'czech', AT:'austria',
+  DK:'denmark', FI:'finland', JO:'jordan', KW:'kuwait', LY:'libya',
+  DZ:'algeria', TN:'tunisia', KZ:'kazakhstan', BD:'bangladesh',
+  EU:'european union',
+};
+
 function geoFromISO(code) {
+  if (!code) return null;
   const cities = ISO_CITIES[code];
-  if (cities?.length) {
-    const [lat, lon] = cities[Math.floor(Math.random() * cities.length)];
-    return { lat, lon, tag: code.toLowerCase(), country: code };
-  }
-  const c = ISO_COORDS[code];
-  if (c) return { lat: c[0], lon: c[1], tag: code.toLowerCase(), country: code };
-  return null;
+  let coord;
+  if (cities?.length)        coord = cities[Math.floor(Math.random() * cities.length)];
+  else if (ISO_COORDS[code]) coord = ISO_COORDS[code];
+  else return null;
+  const [lat, lon] = coord;
+  const tag = ISO_TO_CANONICAL_TAG[code] || code.toLowerCase();
+  const country = tag.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return { lat, lon, tag, country };
 }
 
 // Aliases → canonical tag (para que trump/washington/paris batam no país certo)
@@ -1254,31 +1302,242 @@ const SOURCE_TIER = {
   'Foreign Policy': 1, 'Politico': 1, 'The Verge': 1, 'TechCrunch': 1,
   // T1 — Rússia primária
   'Moscow Times': 1,
+  // T1 — Tech/Macro premium adicionados
+  'Wired': 1, 'Stratechery': 1,
+  'Financial Times': 1, 'The Economist': 1, 'Project Syndicate': 1,
   // T2 — regional relevante
   'G1 Globo': 2, 'La Nación': 2, 'ANSA': 2, 'Notes from Poland': 2,
   'Dawn': 2, 'Taipei Times': 2, 'CBC News': 2, 'CNA': 2,
   // T2 — analítico complementar
   'Foreign Affairs': 2, 'Axios': 2, 'Al-Monitor': 2, 'Middle East Eye': 2,
   'Meduza': 2, 'AllAfrica': 2, 'Ars Technica': 2, 'MIT Technology Review': 2,
+  // T2 — Tech/Macro adicionados
+  'The Register': 2, 'VentureBeat': 2, 'IEEE Spectrum': 2, 'Engadget': 2,
+  'Rest of World': 2, 'Hacker News': 2,
+  'MarketWatch': 2, 'CNBC': 2, 'Seeking Alpha': 2, 'IMF Blog': 2, 'Brookings': 2,
   // T3 — diversidade geográfica + macro agregador
   'El Universal': 3, 'The Punch': 3, 'ABC Australia': 3, 'DutchNews': 3,
   'Rappler': 3, 'Bangkok Post': 3, 'Morocco World News': 3,
   'Investing.com': 3, 'Crisis Group': 3,
+  // T3 — Tech/Macro adicionados
+  "Tom's Hardware": 3, '9to5Mac': 3, 'Yahoo Finance': 3, 'Calculated Risk': 3,
 };
-const TIER_CAP = { 1: 25, 2: 10, 3: 5 };
+const TIER_CAP = { 1: 50, 2: 20, 3: 10 };
 
-// Keyword classifiers — ordem importa: cripto > geo > macro
-const CRIPTO_KW = ['bitcoin','ethereum','crypto','blockchain','defi','nft','web3','btc','eth','solana','binance','coinbase','altcoin','stablecoin','token','halving','dex','on-chain','onchain'];
-const GEO_KW    = ['war','conflict','military','sanction','treaty','nato','united nations',' un ','attack','missile','troops','ceasefire','diplomat','coup','protest','refugee','invasion','offensive','airstrike','hostage','insurgent','rebel'];
-const MACRO_KW  = ['inflation','gdp','recession','interest rate','federal reserve','ecb','imf','world bank','tariff','trade war','economy','economic','fiscal','monetary','bond yield','unemployment','deficit','surplus','oil price','opec','central bank','rate cut','rate hike','earnings','stock market','nasdaq','s&p 500','dow jones'];
+// Keyword classifiers — ordem importa: cripto > geo > tech > macro
+// Match com \b (word boundary): keywords curtas como 'eth','dao','aws' ficam seguras.
+const CRIPTO_KW = [
+  // Tokens majors
+  'bitcoin','btc','satoshi','ethereum','eth','solana','sol','xrp','ripple','cardano','ada',
+  'polkadot','dot','chainlink','link','avalanche','avax','dogecoin','doge','shiba','shib',
+  'toncoin','near protocol','polygon','matic','uniswap','uni','aave','cosmos','atom','optimism',
+  'arbitrum','arb','sui','sei','injective','inj','fantom','ftm','lido','ldo','makerdao','mkr',
+  'render','rndr','filecoin','fil','curve','crv','compound','synthetix','snx','hyperliquid',
+  // Stablecoins
+  'usdt','usdc','tether','circle','dai stablecoin','stablecoin','stablecoins','frax','busd','cbdc',
+  // Conceitos
+  'crypto','cryptocurrency','blockchain','defi','nft','nfts','web3','dao','dex','cex','amm',
+  'mev','rollup','layer 2','l2 chain','layer 1','sidechain','sharding','zk-snark','zero-knowledge',
+  'zk-rollup','smart contract','smart contracts','gas fee','mainnet','testnet','hard fork','soft fork',
+  'tokenomics','tokenization','tokenized',
+  // ETF/produtos
+  'bitcoin etf','ethereum etf','spot etf','spot bitcoin','spot ethereum','gbtc','ibit','fbtc','ethe',
+  // Mercado/cultura
+  'altcoin','altcoins','altseason','halving','hashrate','hash rate','hodl','memecoin','meme coin',
+  'shitcoin','rugpull','rug pull','presale','airdrop','staking','tvl','yield farming','liquidity pool',
+  'lending protocol','impermanent loss',
+  // Players/exchanges
+  'binance','coinbase','kraken','bybit','okx','bitget','kucoin','gemini exchange','ftx','bitfinex',
+  'changpeng zhao','brian armstrong','sbf','bankman-fried','vitalik','buterin','do kwon','satoshi nakamoto',
+  // Eventos/regulação
+  'sec crypto','crypto bill','crypto regulation','tornado cash','crypto mixer','crypto exchange',
+  // Companhias cripto-adjacentes
+  'microstrategy','saylor','michael saylor','grayscale','strategy hyper','metaplanet',
+];
 
-function classifyTitle(title, sourceCategory) {
+const GEO_KW = [
+  // Conflito
+  'war','conflict','military','militant','militants','militia','attack','attacks','missile','missiles',
+  'troops','ceasefire','invasion','offensive','airstrike','drone strike','hostage','insurgent','insurgents',
+  'rebel','rebels','jihadist','jihadists','terrorist','terrorism','terror attack','genocide','warfare',
+  'shelling','bombing','bombardment',
+  // Diplomático
+  'diplomat','diplomatic','diplomacy','treaty','accord','alliance','embargo','blockade','expulsion',
+  'sanction','sanctions','sanctioning','peace talks','peace deal','peace summit',
+  // Orgs / blocos
+  'nato','united nations','security council','european union','eu summit','brics','g7','g20','g7 summit',
+  'g20 summit','opec','opec\\+','asean','african union','arab league','un assembly','un secretary',
+  // Política / eleições
+  'election','elections','presidential election','general election','vote','votes','ballot','referendum',
+  'parliament','parliamentary','congress','senate','senator','prime minister','president','presidency',
+  'cabinet','minister','government','impeachment','coup','junta','protest','protests','riot','riots',
+  'uprising','revolution','dictator','dictatorship','authoritarian','democracy','democratic',
+  // Líderes
+  'putin','vladimir putin','zelensky','volodymyr zelensky','trump','donald trump','biden','joe biden',
+  'kamala harris','xi jinping','modi','narendra modi','netanyahu','benjamin netanyahu','erdogan',
+  'recep tayyip erdogan','macron','emmanuel macron','scholz','olaf scholz','sunak','rishi sunak',
+  'starmer','keir starmer','meloni','giorgia meloni','milei','javier milei','sheinbaum','claudia sheinbaum',
+  'lula','luiz inácio lula','bolsonaro','jair bolsonaro','kim jong','kim jong un','lukashenko',
+  'aleksandr lukashenko','orban','viktor orban','duterte','marcos','ferdinand marcos','von der leyen',
+  // Países / regiões em foco
+  'russia','russian','ukraine','ukrainian','israel','israeli','palestine','palestinian','iran','iranian',
+  'china','chinese','taiwan','taiwanese','north korea','south korea','syria','syrian','yemen','yemeni',
+  'lebanon','lebanese','iraq','iraqi','afghanistan','afghan','pakistan','pakistani','sudan','sudanese',
+  'myanmar','venezuela','cuba',
+  // Hotspots
+  'gaza','west bank','jerusalem','hamas','hezbollah','taliban','houthi','houthis','isis','al-qaeda',
+  'wagner group','south china sea','taiwan strait','korean peninsula','kashmir','donbas','crimea',
+  'strait of hormuz','red sea','suez canal','sahel','tigray',
+  // Temas
+  'border crisis','immigration','refugee','refugees','asylum','deportation','migration','migrant',
+  'cyber attack','cyber-attack','disinformation','propaganda','espionage','spy agency','intelligence agency',
+  // Macro-geo
+  'trade war','tariffs','imposing tariffs','lifting sanctions','arms deal','arms sale','arms embargo',
+  'nuclear weapon','nuclear test','nuclear program','nuclear deal',
+];
+
+const TECH_KW = [
+  // IA / ML
+  'artificial intelligence','a\\.i\\.','openai','anthropic','claude ai','chatgpt','gemini','google gemini',
+  'deepseek','perplexity','large language model','llm','llms','machine learning','deep learning',
+  'neural network','generative ai','genai','gpt-4','gpt-5','gpt-6','llama 3','llama 4','meta llama',
+  'mistral ai','transformer model','agi','asi','multimodal model','foundation model','reasoning model',
+  'midjourney','dall-e','stable diffusion','runway','hugging face','stability ai','google deepmind',
+  'deepmind','xai','grok','copilot','microsoft copilot','character ai','character\\.ai',
+  // AI agents/governance
+  'ai agent','ai agents','ai chip','ai chips','ai model','ai safety','ai regulation','ai act',
+  'ai pause','ai bias','ai alignment',
+  // Big tech
+  'apple','alphabet','google','microsoft','meta platforms','nvidia','tesla','spacex','starlink',
+  'samsung','qualcomm','amazon web services','intel','amd','oracle','ibm','sony','sap',
+  'adobe','salesforce','servicenow','palantir','snowflake','databricks',
+  // Plataformas
+  'iphone','macbook','vision pro','apple vision','android','ios update','windows 11','macos',
+  'pixel phone','surface laptop','quest 3','oculus','meta quest','apple silicon','m4 chip','m3 chip',
+  // Líderes tech
+  'elon musk','sam altman','mark zuckerberg','sundar pichai','satya nadella','jensen huang','tim cook',
+  'jeff bezos','andy jassy','dario amodei','demis hassabis','reid hoffman','peter thiel',
+  // Semicondutores
+  'semiconductor','semiconductors','tsmc','sk hynix','foundry','gpu chip','ai gpu','memory chip',
+  'nand flash','dram','euv lithography','asml','arm holdings',
+  // Robótica
+  'robotics','humanoid','humanoid robot','self-driving','autonomous vehicle','autonomous vehicles',
+  'robotaxi','optimus robot','tesla bot','figure ai',
+  // Quantum/Bio
+  'quantum computing','quantum computer','quantum supremacy','biotech','gene editing','crispr',
+  'gene therapy','mrna vaccine','synthetic biology',
+  // Cyber
+  'cybersecurity','cyber security','cyberattack','cyber attack','data breach','ransomware','malware',
+  'phishing','zero-day','zero day exploit','spyware','dark web','data leak','ransomware attack',
+  // Cloud/infra
+  'cloud computing','edge computing','kubernetes','docker','linux kernel','open source ai',
+  'foundation model','data center','data centre','5g network','6g network','internet of things','iot',
+  // Hardware/devices
+  'wearable','smart glasses','vr headset','ar glasses','augmented reality','virtual reality',
+  // Chips guerra
+  'chip war','chip ban','chip export','chip sanction',
+];
+
+const MACRO_KW = [
+  // Atual
+  'inflation','gdp','recession','interest rate','interest rates','federal reserve','ecb','imf',
+  'world bank','tariff','trade war','economy','economic','fiscal','monetary','bond yield','unemployment',
+  'deficit','surplus','oil price','opec','central bank','rate cut','rate hike','earnings','stock market',
+  'nasdaq','s&p 500','dow jones',
+  // Fed
+  'powell','jerome powell','fomc','jackson hole','fed rate','fed minutes','fed meeting','fed statement',
+  'fed chair','fed governor','fed officials',
+  // Treasury / yields
+  'treasury','treasuries','yield curve','10-year','10 year','30-year','bond yields','treasury yields',
+  'sovereign debt',
+  // Markets
+  'stocks','equities','equity','market rally','stock rally','asset rally','crypto rally',
+  'market crash','sell-off','selloff','correction','bear market','bull market',
+  'volatility','vix index','vix','market open','market close',
+  // Indices
+  'russell 2000','nyse','ftse','ftse 100','dax','cac 40','nikkei','hang seng','kospi',
+  'shanghai composite','bovespa','ibovespa','msci','emerging markets','em equities',
+  // Currencies
+  'dollar index','dxy','us dollar','euro','japanese yen','pound sterling','brazilian real','chinese yuan',
+  'currency market','forex','fx market','dollar rally','dollar weakness',
+  // Inflation/CPI
+  'cpi','core cpi','pce','core pce','ppi','deflation','disinflation','stagflation','price pressure',
+  'price growth','headline inflation','core inflation',
+  // Jobs
+  'jobs report','jobless claims','nonfarm payrolls','payrolls','nfp','wage growth','wages','labor market',
+  'labour market','employment data',
+  // Activity
+  'retail sales','consumer confidence','consumer sentiment','housing starts','home sales','existing home',
+  'pmi','ism','durable goods','industrial production','factory output',
+  // Commodities
+  'crude oil','brent crude','wti crude','gold price','gold rush','gold trading','gold reserve',
+  'silver price','copper price','lithium','natural gas','lng','wheat','corn','soybean','soybeans',
+  'commodity','commodities',
+  // Bond
+  'high yield','junk bond','investment grade','credit spread','spread widening','default risk',
+  // Banks
+  'jpmorgan','jp morgan','jamie dimon','goldman sachs','goldman','morgan stanley','citi bank','citigroup',
+  'ubs bank','deutsche bank','hsbc','bank of america','wells fargo','santander','bnp paribas',
+  'societe generale','nomura','icbc',
+  // Macro events
+  'rate cuts','rate hikes','basis point','basis points','monetary policy','hawkish','dovish',
+  'soft landing','hard landing','quantitative easing','quantitative tightening','balance sheet',
+  'reverse repo','debt ceiling','government shutdown','budget deficit','fiscal stimulus',
+  // Bancos centrais não-fed
+  'lagarde','christine lagarde','andrew bailey','kazuo ueda','bank of england','bank of japan',
+  'pboc','reserve bank of india','rbi','copom','selic','galipolo','campos neto',
+  // Asset managers
+  'vanguard','blackrock','larry fink','fidelity','vaneck','ark invest','cathie wood',
+  // Política fiscal
+  'tax cut','tax cuts','tax hike','tax reform','tax bill',
+];
+
+function _buildKwRegex(kws) {
+  const escaped = kws.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // \b boundaries evitam falsos positivos tipo 'aws' em 'withdraws'.
+  return new RegExp(`\\b(?:${escaped.join('|')})\\b`, 'i');
+}
+const RE_CRIPTO = _buildKwRegex(CRIPTO_KW);
+const RE_GEO    = _buildKwRegex(GEO_KW);
+const RE_TECH   = _buildKwRegex(TECH_KW);
+const RE_MACRO  = _buildKwRegex(MACRO_KW);
+
+// Fallback por fonte: artigo sem keyword óbvia mas vindo de fonte temática
+// é catalogado pela natureza da fonte. Cobre casos como 'Bankless' artigos
+// editoriais sem termo cripto explícito, ou Bloomberg sobre yields sem 'fed'.
+const SOURCE_DEFAULT_CATEGORY = {
+  // Cripto-native
+  'CoinDesk': 'cripto', 'CoinTelegraph': 'cripto', 'The Block': 'cripto',
+  'Decrypt': 'cripto', 'Bankless': 'cripto', 'The Defiant': 'cripto', 'Blockworks': 'cripto',
+  'CryptoCompare': 'cripto',
+  // Tech
+  'The Verge': 'tech', 'TechCrunch': 'tech', 'Ars Technica': 'tech',
+  'MIT Technology Review': 'tech',
+  'Wired': 'tech', 'The Register': 'tech', 'VentureBeat': 'tech',
+  'IEEE Spectrum': 'tech', 'Engadget': 'tech', "Tom's Hardware": 'tech',
+  'Rest of World': 'tech', '9to5Mac': 'tech', 'Stratechery': 'tech',
+  'Hacker News': 'tech',
+  // Macro/Markets
+  'Bloomberg': 'macro', 'Investing.com': 'macro', 'Reuters': 'macro',
+  'Financial Times': 'macro', 'The Economist': 'macro', 'MarketWatch': 'macro',
+  'CNBC': 'macro', 'Yahoo Finance': 'macro', 'Seeking Alpha': 'macro',
+  'IMF Blog': 'macro', 'Project Syndicate': 'macro', 'Brookings': 'macro',
+  'Calculated Risk': 'macro',
+  // Geopolítica
+  'Foreign Policy': 'geo', 'Foreign Affairs': 'geo', 'Crisis Group': 'geo',
+  'Politico': 'geo', 'Axios': 'geo', 'Al Jazeera': 'geo',
+  'Al-Monitor': 'geo', 'Middle East Eye': 'geo', 'Ukrinform': 'geo',
+  'Moscow Times': 'geo', 'Meduza': 'geo',
+};
+
+function classifyTitle(title, sourceCategory, source) {
   if (sourceCategory) return sourceCategory; // Guardian sectionId já mapeado
   const t = title.toLowerCase();
-  if (CRIPTO_KW.some(k => t.includes(k))) return 'cripto';
-  if (GEO_KW.some(k => t.includes(k)))    return 'geo';
-  if (MACRO_KW.some(k => t.includes(k)))  return 'macro';
-  return 'other';
+  if (RE_CRIPTO.test(t)) return 'cripto';
+  if (RE_GEO.test(t))    return 'geo';
+  if (RE_TECH.test(t))   return 'tech';
+  if (RE_MACRO.test(t))  return 'macro';
+  return SOURCE_DEFAULT_CATEGORY[source] || 'other';
 }
 
 // Estado dos filtros activos
@@ -1287,15 +1546,22 @@ let _filterCat     = 'all';
 let _blockedSources = new Set(); // blocklist: fontes desactivadas. Vazio = todas activas.
 let _allEventos    = [];
 
+function _timeLimitMs() {
+  if (_filterTime === '24h') return CFG.FILTER_24H_MS;
+  if (_filterTime === '7d')  return CFG.FILTER_7D_MS;
+  return CFG.FILTER_30D_MS; // 'all' = teto de 30 dias
+}
+
 function applyFilters() {
   const now   = Date.now();
-  const limit = _filterTime === '24h' ? CFG.FILTER_24H_MS : _filterTime === '7d' ? CFG.FILTER_7D_MS : Infinity;
+  const limit = _timeLimitMs();
   EVENTOS = _allEventos.filter(ev => {
     if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
     if (_blockedSources.has(ev.source)) return false;
-    if (limit < Infinity && ev.publishedAt) {
-      if (now - new Date(ev.publishedAt).getTime() > limit) return false;
-    }
+    // Filtro estrito: sem publishedAt = sem como provar que está dentro da janela.
+    if (!ev.publishedAt) return false;
+    const ts = new Date(ev.publishedAt).getTime();
+    if (Number.isNaN(ts) || now - ts > limit) return false;
     return true;
   });
   if (window._globe?.rebuildMarkers) window._globe.rebuildMarkers(EVENTOS);
@@ -1306,12 +1572,12 @@ function applyFilters() {
 function _getVisibleSources() {
   // Fontes presentes após filtros de tempo+categoria (ignora filtro de fonte)
   const now   = Date.now();
-  const limit = _filterTime === '24h' ? CFG.FILTER_24H_MS : _filterTime === '7d' ? CFG.FILTER_7D_MS : Infinity;
+  const limit = _timeLimitMs();
   const visible = _allEventos.filter(ev => {
     if (_filterCat !== 'all' && ev.newsCategory !== _filterCat) return false;
-    if (limit < Infinity && ev.publishedAt) {
-      if (now - new Date(ev.publishedAt).getTime() > limit) return false;
-    }
+    if (!ev.publishedAt) return false;
+    const ts = new Date(ev.publishedAt).getTime();
+    if (Number.isNaN(ts) || now - ts > limit) return false;
     return true;
   });
   return [...new Set(visible.map(ev => ev.source))].sort();
@@ -1441,22 +1707,26 @@ async function fetchGlobeNews() {
     const dedup = title.toLowerCase().slice(0, 50);
     if (seen.has(dedup)) return;
 
+    // Tenta inferir país pelo título (mais preciso pro evento real).
+    // Se não bater, usa countryCode do feed (origem editorial) como fallback.
     let geo = geoFromText(title);
+    if (!geo && countryCode) geo = geoFromISO(countryCode);
     if (!geo) return;
 
     const { lat, lon, tag, country } = geo;
+    // Sem jitter aqui: geoTagArticles() espalha via samplePoint dentro do polígono.
+    // Países pequenos (SG, BH, IL) ficavam fora do mapa com jitter ±1°.
+    const newsCategory = classifyTitle(title, sourceCategory, source);
+    if (newsCategory === 'other') return; // descarta sem catalogação confiável
     seen.add(dedup);
-    const jLat = lat + (Math.random() - 0.5) * 2;
-    const jLon = lon + (Math.random() - 0.5) * 2;
-    const newsCategory = classifyTitle(title, sourceCategory);
     const pub = publishedAt ? new Date(publishedAt) : null;
     results.push({
       id, url, source,
       title: title.length > 90 ? title.slice(0, 87) + '…' : title,
       country, tag,
       baseLat: lat, baseLon: lon,
-      lat: Math.max(-85, Math.min(85, jLat)),
-      lon: ((jLon + 180) % 360) - 180,
+      lat: Math.max(-85, Math.min(85, lat)),
+      lon: ((lon + 180) % 360) - 180,
       date: pub ? pub.toISOString().slice(0,10) : new Date().toISOString().slice(0,10),
       publishedAt: pub ? pub.toISOString() : null,
       author: source,
@@ -1536,7 +1806,7 @@ async function fetchGlobeNews() {
 ========================================================== */
 loadAll()
   .then(() => fetchGlobeNews())
-  .then(() => setInterval(fetchGlobeNews, CFG.GLOBE_REFRESH_MS))
+  .then(() => setInterval(() => { if (!document.hidden) fetchGlobeNews(); }, CFG.GLOBE_REFRESH_MS))
   .catch(err => console.error(err));
 
 // Pause stream animations when hero is off-screen
@@ -1765,4 +2035,4 @@ async function refreshTicker() {
 seedMocks();
 renderTickerRow();           // skeletons + mock seeds
 refreshTicker();             // live fetch
-setInterval(refreshTicker, CFG.TICKER_REFRESH_MS);
+setInterval(() => { if (!document.hidden) refreshTicker(); }, CFG.TICKER_REFRESH_MS);
