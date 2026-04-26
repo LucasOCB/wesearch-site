@@ -7,7 +7,7 @@
     "lon": 0,
     "url": "https://wesearch.substack.com",
     "date": "2026-04-15",
-    "author": "Rafael Menezes",
+    "author": "WeSearch Research",
     "category": "On-Chain"
   },
   {
@@ -18,18 +18,18 @@
     "lon": -47.93,
     "url": "https://wesearch.substack.com",
     "date": "2026-04-12",
-    "author": "Júlia Cardoso",
+    "author": "WeSearch Research",
     "category": "Macro"
   },
   {
     "id": "2026-04-09-etf-hong-kong",
     "title": "ETFs de Bitcoin em Hong Kong: o contraponto asiático",
     "country": "Hong Kong",
-    "lat": 22.30,
+    "lat": 22.3,
     "lon": 114.17,
     "url": "https://wesearch.substack.com",
     "date": "2026-04-09",
-    "author": "Henrique Sato",
+    "author": "WeSearch Research",
     "category": "Mercado"
   },
   {
@@ -40,7 +40,7 @@
     "lon": -77.03,
     "url": "https://wesearch.substack.com",
     "date": "2026-04-05",
-    "author": "Rafael Menezes",
+    "author": "WeSearch Research",
     "category": "Macro"
   },
   {
@@ -51,29 +51,29 @@
     "lon": 4.35,
     "url": "https://wesearch.substack.com",
     "date": "2026-04-02",
-    "author": "Ana Beatriz Lima",
+    "author": "WeSearch Research",
     "category": "Geopolítica"
   },
   {
     "id": "2026-03-28-ondas-em",
     "title": "Stablecoins no Oriente Médio: o corredor Dubai-Istambul",
     "country": "EAU",
-    "lat": 25.20,
+    "lat": 25.2,
     "lon": 55.27,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-28",
-    "author": "Henrique Sato",
+    "author": "WeSearch Research",
     "category": "Geopolítica"
   },
   {
     "id": "2026-03-24-argentina-dolar",
     "title": "Argentina pós-reforma: dolarização on-chain em números",
     "country": "Argentina",
-    "lat": -34.60,
+    "lat": -34.6,
     "lon": -58.38,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-24",
-    "author": "Júlia Cardoso",
+    "author": "WeSearch Research",
     "category": "Macro"
   },
   {
@@ -84,7 +84,7 @@
     "lon": 8.68,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-20",
-    "author": "Ana Beatriz Lima",
+    "author": "WeSearch Research",
     "category": "On-Chain"
   },
   {
@@ -95,7 +95,7 @@
     "lon": 139.69,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-15",
-    "author": "Henrique Sato",
+    "author": "WeSearch Research",
     "category": "Macro"
   },
   {
@@ -106,7 +106,7 @@
     "lon": -122.42,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-10",
-    "author": "Rafael Menezes",
+    "author": "WeSearch Research",
     "category": "On-Chain"
   },
   {
@@ -117,7 +117,7 @@
     "lon": 72.87,
     "url": "https://wesearch.substack.com",
     "date": "2026-03-05",
-    "author": "Ana Beatriz Lima",
+    "author": "WeSearch Research",
     "category": "Geopolítica"
   },
   {
@@ -128,18 +128,18 @@
     "lon": -99.13,
     "url": "https://wesearch.substack.com",
     "date": "2026-02-28",
-    "author": "Júlia Cardoso",
+    "author": "WeSearch Research",
     "category": "On-Chain"
   },
   {
     "id": "2026-02-22-south-africa",
     "title": "África do Sul e o piloto do rand digital",
     "country": "África do Sul",
-    "lat": -26.20,
+    "lat": -26.2,
     "lon": 28.04,
     "url": "https://wesearch.substack.com",
     "date": "2026-02-22",
-    "author": "Ana Beatriz Lima",
+    "author": "WeSearch Research",
     "category": "Macro"
   },
   {
@@ -150,7 +150,7 @@
     "lon": 151.21,
     "url": "https://wesearch.substack.com",
     "date": "2026-02-18",
-    "author": "Henrique Sato",
+    "author": "WeSearch Research",
     "category": "Geopolítica"
   },
   {
@@ -161,7 +161,7 @@
     "lon": 126.98,
     "url": "https://wesearch.substack.com",
     "date": "2026-02-12",
-    "author": "Henrique Sato",
+    "author": "WeSearch Research",
     "category": "Mercado"
   }
 ]
