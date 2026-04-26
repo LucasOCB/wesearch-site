@@ -96,10 +96,15 @@ async function loadAll() {
   ]);
   EVENTOS = e; ANALISTAS = a; ARTIGOS = r; PARCEIROS = p;
 
-  // Credibility numbers
-  document.getElementById('m-articles').textContent = String(ARTIGOS.length + 35);
-  document.getElementById('m-countries').textContent = String(new Set(EVENTOS.map(x=>x.country)).size);
-  document.getElementById('m-analysts').textContent = String(ANALISTAS.length).padStart(2,'0');
+  // Stats inline na section "Últimas análises" — count real do Substack (cache 12h no Worker).
+  // Hardcode no HTML serve como fallback se o endpoint falhar.
+  fetch(`${CFG.WORKER_URL}/post-count`)
+    .then(r => r.json())
+    .then(d => {
+      const mArt = document.getElementById('m-articles');
+      if (mArt && d?.count > 0) mArt.textContent = String(d.count);
+    })
+    .catch(() => {});
 
   // Globe stats
   document.getElementById('gs-events').textContent = String(EVENTOS.length).padStart(2,'0');
@@ -246,17 +251,18 @@ function renderArticles() {
 function renderAnalysts() {
   const container = document.getElementById('carousel-analysts');
   container.innerHTML = ANALISTAS.map((an, i) => {
-    const hasLink = !!an.substackUrl;
+    const hasLink = !!an.linkUrl;
     const tag = hasLink ? 'a' : 'div';
     const attrs = hasLink
-      ? `href="${safeUrl(an.substackUrl)}" target="_blank" rel="noopener"`
+      ? `href="${safeUrl(an.linkUrl)}" target="_blank" rel="noopener"`
       : 'aria-disabled="true"';
     const photoSafe = safeLocalAsset(an.photoUrl);
     const portrait = photoSafe
       ? `<img class="portrait" src="${photoSafe}" alt="${esc(an.name)}" loading="lazy" decoding="async">`
       : `<span class="initials">${esc(an.initials)}</span>`;
+    const linkLabel = an.linkLabel || 'LinkedIn';
     const footer = hasLink
-      ? `<span>LinkedIn</span><span class="arr">↗</span>`
+      ? `<span>${esc(linkLabel)}</span><span class="arr">↗</span>`
       : `<span>Em breve</span><span class="arr">—</span>`;
     return `
     <${tag} class="analyst${hasLink ? '' : ' is-disabled'}" ${attrs}>

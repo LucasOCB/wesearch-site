@@ -1,0 +1,19 @@
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin
+
+# Assets imutáveis (vendor com SRI) podem ter cache longo
+/assets/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Imagens dos analistas — cache longo, mas com revalidação
+/assets/analysts/*
+  Cache-Control: public, max-age=86400
+
+# JSON de dados — cache curto pra atualizações via GH Actions
+/data/*
+  Cache-Control: public, max-age=300
