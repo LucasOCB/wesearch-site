@@ -11,7 +11,7 @@ const cfg = {
 
 // Magic numbers nomeados (setInterval/setTimeout/filtros de tempo).
 const CFG = {
-  WORKER_URL: 'https://wesearch-news.wesearch.workers.dev',
+  WORKER_URL: 'https://api.wesearchdao.xyz',
   GLOBE_REFRESH_MS: 10 * 60 * 1000,      // 10min — alinhado com Cache-Control do Worker /globe
   TICKER_REFRESH_MS: 5 * 60 * 1000,      // 5min — alinhado com Cache-Control do /ticker
   DRAG_RESUME_MS: 250,                   // delay pra retomar auto-rotate após drag
