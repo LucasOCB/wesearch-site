@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SUBSTACK_API = "https://wesearch.substack.com/api/v1/posts?limit=10"
-OUTPUT_FILE = Path(__file__).parent.parent / "data" / "artigos.json"
+OUTPUT_FILE = Path(__file__).parent.parent / "public" / "data" / "artigos.json"
 MAX_ARTIGOS = 10
 
 MONTHS_PT = {
