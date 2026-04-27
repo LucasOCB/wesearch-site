@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>404 — Sinal perdido · WeSearch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
+  --fg: #f5f5f0;
+  --muted: #8a8580;
+  --muted-dim: #5c5853;
+  --orange: #FF5500;
+  --orange-dim: #cc4400;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body { line-height: 1.55; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 4vw, 3rem);
+}
+
+/* ====== NAV ====== */
+.nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.brand {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.brand .dot { color: var(--orange); }
+.nav-meta {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ====== MAIN ====== */
+main {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5rem);
+  padding: clamp(3rem, 8vw, 6rem) 0;
+}
+@media (max-width: 860px) {
+  main { grid-template-columns: 1fr; }
+  .visual { order: -1; aspect-ratio: 1; max-width: 420px; margin: 0 auto; }
+}
+
+.kicker {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1.6rem;
+}
+.kicker .ds {
+  width: 6px; height: 6px; background: var(--orange); border-radius: 50%;
+  box-shadow: 0 0 10px var(--orange);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.code {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(5.5rem, 14vw, 11rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.05em;
+}
+.code .slash { color: var(--orange); font-weight: 400; }
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.2rem;
+  text-wrap: balance;
+}
+h1 .dot { color: var(--orange); }
+
+p.lead {
+  color: var(--muted);
+  font-size: 1.02rem;
+  max-width: 46ch;
+  margin-bottom: 2.4rem;
+  text-wrap: pretty;
+}
+
+/* Coords / requested-path readout */
+.readout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-dim);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+  margin-bottom: 2.4rem;
+}
+.readout dt { color: var(--muted); }
+.readout dd { color: var(--fg); word-break: break-all; }
+.readout dd.err { color: var(--orange); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 1rem 1.4rem; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 0.95rem 1.4rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  transition: all 0.25s var(--ease);
+}
+.btn:hover { background: var(--orange); color: #0a0a0a; }
+.btn.ghost { border-color: var(--border-strong); color: var(--muted); }
+.btn.ghost:hover { border-color: var(--fg); background: transparent; color: var(--fg); }
+.btn .arr { transition: transform 0.25s var(--ease); }
+.btn:hover .arr { transform: translateX(3px); }
+
+/* ====== VISUAL ====== */
+.visual {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+.visual svg { width: 100%; height: 100%; overflow: visible; }
+
+.ring { fill: none; stroke: var(--border-strong); stroke-width: 1; }
+.ring.dashed { stroke-dasharray: 2 6; stroke: var(--border); }
+.tick { stroke: var(--muted-dim); stroke-width: 1; }
+
+/* Spinning rings */
+.ring-spin-a { animation: rot 60s linear infinite; transform-origin: center; }
+.ring-spin-b { animation: rot 90s linear infinite reverse; transform-origin: center; }
+.ring-spin-c { animation: rot 120s linear infinite; transform-origin: center; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* The orbiting "lost signal" dot */
+.orbit-dot {
+  fill: var(--orange);
+  filter: drop-shadow(0 0 8px var(--orange));
+  animation: orbit 14s linear infinite;
+  transform-origin: 250px 250px;
+}
+@keyframes orbit { to { transform: rotate(360deg); } }
+
+/* Center 404 mark */
+.core-num {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 64px;
+  fill: var(--fg);
+  text-anchor: middle;
+  letter-spacing: -0.03em;
+}
+.core-lbl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+.core-lbl.orange { fill: var(--orange); }
+
+/* Crosshairs */
+.crosshair { stroke: var(--orange); stroke-width: 0.8; opacity: 0.7; }
+
+/* Halftone dots scattered */
+.scatter circle { fill: var(--muted-dim); }
+.scatter circle.hot { fill: var(--orange); opacity: 0.9; }
+
+/* Static / glitch line that slides over the number occasionally */
+.scan {
+  animation: scan 5s linear infinite;
+}
+@keyframes scan {
+  0%, 88%, 100% { opacity: 0; }
+  90% { opacity: 1; }
+  92% { opacity: 0; }
+  94% { opacity: 1; }
+  96% { opacity: 0; }
+}
+
+/* ====== SUGGESTIONS ====== */
+.suggest {
+  border-top: 1px solid var(--border);
+  padding: 2.4rem 0;
+}
+.suggest .head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 1.4rem;
+  flex-wrap: wrap; gap: 0.6rem;
+}
+.suggest h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+.suggest h2 .dot { color: var(--orange); }
+.suggest .head .num {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--muted-dim); letter-spacing: 0.16em; text-transform: uppercase;
+}
+.links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+@media (max-width: 720px) { .links { grid-template-columns: repeat(2, 1fr); } }
+.links a {
+  background: var(--bg);
+  padding: 1.4rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  transition: background 0.25s var(--ease);
+}
+.links a:hover { background: var(--surface); }
+.links .num {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--muted-dim); letter-spacing: 0.16em;
+}
+.links .ttl {
+  font-family: var(--serif); font-weight: 500;
+  font-size: 1.05rem; line-height: 1.2;
+}
+.links .desc {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-top: auto;
+}
+.links a:hover .ttl { color: var(--orange); }
+
+/* ====== FOOTER ====== */
+footer.foot {
+  border-top: 1px solid var(--border);
+  padding: 1.6rem 0 2.4rem;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted-dim);
+  flex-wrap: wrap; gap: 0.6rem;
+}
+footer.foot .live { color: var(--orange); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="nav">
+    <a href="/" class="brand">WeSearch<span class="dot">.</span></a>
+    <span class="nav-meta">Sinal perdido</span>
+  </nav>
+
+  <main>
+    <div class="copy">
+      <span class="kicker"><span class="ds"></span>Cobertura interrompida</span>
+      <div class="code"><span>4</span><span class="slash">/</span><span>0</span><span class="slash">/</span><span>4</span></div>
+      <h1>Esta página saiu da nossa cobertura<span class="dot">.</span></h1>
+      <p class="lead">
+        O endereço solicitado não existe, foi movido ou nunca esteve no ar. Nossos analistas estão olhando em outra direção agora — volte ao mapa principal ou explore as últimas publicações.
+      </p>
+
+
+    </div>
+
+    <div class="visual" aria-hidden="true">
+      <svg viewBox="0 0 500 500">
+        <defs>
+          <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FF5500" stop-opacity="0.18"/>
+            <stop offset="60%" stop-color="#FF5500" stop-opacity="0.04"/>
+            <stop offset="100%" stop-color="#FF5500" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Soft glow behind everything -->
+        <circle cx="250" cy="250" r="180" fill="url(#coreGlow)"/>
+
+        <!-- Outer dashed ring (slow) -->
+        <g class="ring-spin-c">
+          <circle class="ring dashed" cx="250" cy="250" r="240"/>
+        </g>
+
+        <!-- Mid ring with ticks -->
+        <g class="ring-spin-a">
+          <circle class="ring" cx="250" cy="250" r="200"/>
+          <!-- 24 tick marks -->
+          <g>
+            <!-- generated below by JS for cleanliness -->
+          </g>
+        </g>
+
+        <!-- Inner ring with single accent -->
+        <g class="ring-spin-b">
+          <circle class="ring" cx="250" cy="250" r="160"/>
+          <circle cx="410" cy="250" r="3" fill="#FF5500" opacity="0.6"/>
+        </g>
+
+        <!-- Static crosshairs -->
+        <line class="crosshair" x1="250" y1="40" x2="250" y2="80"/>
+        <line class="crosshair" x1="250" y1="420" x2="250" y2="460"/>
+        <line class="crosshair" x1="40" y1="250" x2="80" y2="250"/>
+        <line class="crosshair" x1="420" y1="250" x2="460" y2="250"/>
+
+        <!-- Halftone scatter dots -->
+        <g class="scatter" id="scatter"></g>
+
+        <!-- Orbiting lost signal -->
+        <g class="orbit-dot">
+          <circle cx="250" cy="50" r="5"/>
+        </g>
+
+        <!-- Core 404 mark -->
+        <g>
+          <circle cx="250" cy="250" r="100" fill="#0a0a0a" stroke="var(--border-strong)" stroke-width="1"/>
+          <text class="core-lbl orange" x="250" y="218">SIGNAL · 404</text>
+          <text class="core-num" x="250" y="270">404</text>
+          <text class="core-lbl" x="250" y="295">NOT FOUND</text>
+          <!-- Glitch scan line -->
+          <rect class="scan" x="150" y="248" width="200" height="2" fill="#FF5500" opacity="0.7"/>
+        </g>
+      </svg>
+    </div>
+  </main>
+
+  <section class="suggest">
+    <div class="head">
+      <h2>Talvez você procurasse<span class="dot">.</span></h2>
+      <span class="num">04 destinos</span>
+    </div>
+    <div class="links">
+      <a href="/">
+        <span class="num">01</span>
+        <span class="ttl">Home</span>
+        <span class="desc">Vitrine principal</span>
+      </a>
+      <a href="/#globo">
+        <span class="num">02</span>
+        <span class="ttl">Globo de cobertura</span>
+        <span class="desc">Notícias por país</span>
+      </a>
+      <a href="/#artigos">
+        <span class="num">03</span>
+        <span class="ttl">Últimas análises</span>
+        <span class="desc">Publicações recentes</span>
+      </a>
+      <a href="/#time">
+        <span class="num">04</span>
+        <span class="ttl">Time</span>
+        <span class="desc">Equipe de research</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>© 2026 WeSearch · Research independente</span>
+    <span class="live">● Sistema operacional</span>
+  </footer>
+
+</div>
+
+<script>
+  // Build halftone scatter dots (deterministic seed)
+  (function () {
+    const g = document.getElementById('scatter');
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    let s = 1337;
+    const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    for (let i = 0; i < 80; i++) {
+      const angle = rand() * Math.PI * 2;
+      // Rings between r=110 and r=235, weighted toward outer
+      const r = 110 + Math.pow(rand(), 0.6) * 125;
+      const x = 250 + Math.cos(angle) * r;
+      const y = 250 + Math.sin(angle) * r;
+      const c = document.createElementNS(SVGNS, 'circle');
+      c.setAttribute('cx', x.toFixed(1));
+      c.setAttribute('cy', y.toFixed(1));
+      c.setAttribute('r', (rand() < 0.85 ? 1 : 1.6).toFixed(1));
+      if (rand() < 0.06) c.setAttribute('class', 'hot');
+      g.appendChild(c);
+    }
+    // Tick marks around r=200
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      const x1 = 250 + Math.cos(a) * 195;
+      const y1 = 250 + Math.sin(a) * 195;
+      const x2 = 250 + Math.cos(a) * 205;
+      const y2 = 250 + Math.sin(a) * 205;
+      const l = document.createElementNS(SVGNS, 'line');
+      l.setAttribute('class', 'tick');
+      l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+      l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+      g.appendChild(l);
+    }
+  })();
+</script>
+
+</body>
+</html>
