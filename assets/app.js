@@ -250,7 +250,10 @@ function renderArticles() {
 ========================================================== */
 function renderAnalysts() {
   const container = document.getElementById('carousel-analysts');
-  container.innerHTML = ANALISTAS.map((an, i) => {
+  // Filtra membros marcados como hidden (ex: aguardando foto). Numeração
+  // do `i+1` segue a posição visível, não o índice no JSON.
+  const visible = ANALISTAS.filter(an => !an.hidden);
+  container.innerHTML = visible.map((an, i) => {
     const hasLink = !!an.linkUrl;
     const tag = hasLink ? 'a' : 'div';
     const attrs = hasLink
