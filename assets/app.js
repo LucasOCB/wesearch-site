@@ -1323,7 +1323,7 @@ const SOURCE_TIER = {
   // T2 — Tech/Macro adicionados
   'The Register': 2, 'VentureBeat': 2, 'IEEE Spectrum': 2, 'Engadget': 2,
   'Rest of World': 2, 'Hacker News': 2,
-  'MarketWatch': 2, 'CNBC': 2, 'Seeking Alpha': 2, 'IMF Blog': 2, 'Brookings': 2,
+  'MarketWatch': 2, 'CNBC': 2, 'Seeking Alpha': 2,
   // T3 — diversidade geográfica + macro agregador
   'El Universal': 3, 'The Punch': 3, 'ABC Australia': 3, 'DutchNews': 3,
   'Rappler': 3, 'Bangkok Post': 3, 'Morocco World News': 3,
@@ -1530,7 +1530,7 @@ const SOURCE_DEFAULT_CATEGORY = {
   'Bloomberg': 'macro', 'Investing.com': 'macro', 'Reuters': 'macro',
   'Financial Times': 'macro', 'The Economist': 'macro', 'MarketWatch': 'macro',
   'CNBC': 'macro', 'Yahoo Finance': 'macro', 'Seeking Alpha': 'macro',
-  'IMF Blog': 'macro', 'Project Syndicate': 'macro', 'Brookings': 'macro',
+  'Project Syndicate': 'macro',
   'Calculated Risk': 'macro',
   // Geopolítica
   'Foreign Policy': 'geo', 'Foreign Affairs': 'geo', 'Crisis Group': 'geo',
