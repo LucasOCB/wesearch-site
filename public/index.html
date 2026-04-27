@@ -148,6 +148,7 @@
             <button class="gf-btn" id="filter-source-none" type="button">Nenhuma</button>
             <span class="gf-modal-count mono" id="filter-source-count">—</span>
           </div>
+          <input type="text" id="filter-source-search" class="gf-source-search" placeholder="Buscar fonte…" aria-label="Buscar fonte" autocomplete="off" />
           <div class="gf-modal-list" id="filter-source"></div>
         </div>
       </div>
@@ -161,22 +162,26 @@
           <div>PROJ · ORTHOGRAPHIC</div>
         </div>
         <svg id="globe-svg" viewBox="0 0 600 600" aria-hidden="true"></svg>
+        <div class="globe-loading" id="globe-loading" aria-live="polite">
+          <span class="gl-dot"></span>
+          <span>Sincronizando cobertura</span>
+        </div>
         <div class="country-label" id="country-label" aria-hidden="true">
           <span class="cl-name"></span>
           <span class="cl-meta"></span>
         </div>
-        <aside class="country-panel" id="country-panel" aria-live="polite">
+        <aside class="country-panel" id="country-panel" role="dialog" aria-modal="true" aria-labelledby="cp-title" aria-live="polite" tabindex="-1">
           <header>
             <div>
               <span class="cp-kicker mono orange">◆ Cobertura</span>
               <h3 id="cp-title">—</h3>
               <span id="cp-count" class="cp-count mono">—</span>
             </div>
-            <button id="cp-close" aria-label="Fechar">✕</button>
+            <button id="cp-close" aria-label="Fechar painel de cobertura" type="button">✕</button>
           </header>
           <div class="cp-list" id="cp-list"></div>
         </aside>
-        <div class="globe-tooltip" id="tip">
+        <div class="globe-tooltip" id="tip" role="tooltip" aria-hidden="true">
           <span class="cat" id="tip-cat">CATEGORY</span>
           <div class="ttl" id="tip-title">Title</div>
           <div class="meta" id="tip-meta">META</div>

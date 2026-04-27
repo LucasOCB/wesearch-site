@@ -565,10 +565,56 @@ section.tight { padding: 0; }
   margin-left: auto;
   font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em;
 }
+.gf-source-search {
+  margin: 0.25rem 1rem 0.5rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color .2s var(--ease);
+}
+.gf-source-search:focus { border-color: var(--orange); }
+.gf-source-search::placeholder { color: var(--muted-dim); }
+
 .gf-modal-list {
   flex: 1; overflow-y: auto;
   padding: 0.5rem 0.5rem 0.75rem;
   display: flex; flex-direction: column; gap: 0.1rem;
+}
+.gf-source-row.is-hidden { display: none; }
+
+/* Loading indicator no globe */
+.globe-loading {
+  position: absolute;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s var(--ease);
+}
+.globe-loading.on { opacity: 1; }
+.globe-loading .gl-dot {
+  width: 6px; height: 6px;
+  background: var(--orange);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--orange);
+  animation: gl-pulse 1.4s ease-in-out infinite;
+}
+@keyframes gl-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.65); }
 }
 .gf-source-row {
   display: flex; align-items: center; gap: 0.65rem;
@@ -1161,3 +1207,22 @@ footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }
 
 /* SR-only */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ====== PRINT ======
+   Versão clean para imprimir/PDF: oculta UI interativa, usa cores legíveis em
+   papel branco, mantém títulos + lista SR de eventos como sumário textual. */
+@media print {
+  body { background: #fff; color: #111; }
+  .nav, .ticker-section, .globe-stage, .carousel-ctl, .progress,
+  .gf-modal, .globe-loading, .hero-mark-streams, .globe-filters {
+    display: none !important;
+  }
+  .hero { min-height: auto; padding: 1.5rem 0; }
+  .hero-title, h1, h2, h3 { color: #000; }
+  .heading, .hero-title { font-size: 1.6rem; }
+  .card, .analyst, .partner { page-break-inside: avoid; border-color: #aaa; }
+  a { color: #000; text-decoration: underline; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.7em; color: #555; }
+  .sr-only { position: static; width: auto; height: auto; clip: auto; }
+  .sr-only li { list-style: disc; margin-left: 1.2em; }
+}

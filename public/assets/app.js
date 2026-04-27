@@ -48,6 +48,17 @@ function safeUrl(u) {
   return u.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// Fontes com anti-bot agressivo que rejeitam tráfego de domínios desconhecidos
+// como referrer. Usar rel="noreferrer" faz browser não enviar Referer header,
+// fazendo a Bloomberg/etc tratar como visita direta. Adicionar fontes conforme
+// reportado por usuários.
+const NO_REFERRER_SOURCES = new Set([
+  'Bloomberg',
+]);
+function linkRel(source) {
+  return NO_REFERRER_SOURCES.has(source) ? 'noopener noreferrer' : 'noopener';
+}
+
 function safeLocalAsset(u) {
   if (!u || typeof u !== 'string') return null;
   if (!/^assets\/[a-z0-9/_-]+\.(png|jpg|jpeg|webp|svg)$/i.test(u)) return null;
@@ -88,13 +99,19 @@ async function fetchArtigosSubstack() {
 }
 
 async function loadAll() {
-  const [e, a, r, p] = await Promise.all([
+  const [e, a, r, p, geo] = await Promise.all([
     fetch('data/eventos.json').then(r=>r.json()),
     fetch('data/analistas.json').then(r=>r.json()),
     fetchArtigosSubstack(),
-    fetch('data/parceiros.json').then(r=>r.json())
+    fetch('data/parceiros.json').then(r=>r.json()),
+    fetch('data/geo-dict.json').then(r=>r.json()).catch(() => ({}))
   ]);
   EVENTOS = e; ANALISTAS = a; ARTIGOS = r; PARCEIROS = p;
+  // Popular GEO_DICT global + GEO_ENTRIES (sorted longest-first pra evitar
+  // 'iran' matchar dentro de 'ukraine'). Falha → dict vazio, geoFromText
+  // sempre retorna null e fallback ISO assume.
+  GEO_DICT = geo;
+  GEO_ENTRIES = Object.entries(GEO_DICT).sort((a, b) => b[0].length - a[0].length);
 
   // Stats inline na section "Últimas análises" — count real do Substack (cache 12h no Worker).
   // Hardcode no HTML serve como fallback se o endpoint falhar.
@@ -512,7 +529,10 @@ async function setupGlobe() {
       c.addEventListener('mouseleave', hideTip);
       c.addEventListener('click', () => {
         const u = safeUrl(ev.url);
-        if (u !== '#') window.open(u, '_blank', 'noopener');
+        if (u !== '#') {
+          const features = NO_REFERRER_SOURCES.has(ev.source) ? 'noopener,noreferrer' : 'noopener';
+          window.open(u, '_blank', features);
+        }
       });
       frag.appendChild(c);
       evtNodes.set(ev.id, c);
@@ -600,6 +620,8 @@ async function setupGlobe() {
 
 
 
+  // Foco anterior — restaurado ao fechar o panel (a11y)
+  let _prevFocus = null;
   function openCountryPanel(tag, displayName) {
     const items = EVENTOS.filter(e => e.tag === tag || (e.country||'').toLowerCase() === (tag||'').toLowerCase());
     panelTitle.textContent = displayName || tag;
@@ -607,15 +629,25 @@ async function setupGlobe() {
       ? 'Nenhuma publicação ainda'
       : items.length + ' publicaç' + (items.length === 1 ? 'ão' : 'ões');
     panelList.innerHTML = items.length
-      ? items.map(ev => `<a class="cp-item" href="${safeUrl(ev.url)}" target="_blank" rel="noopener">
+      ? items.map(ev => `<a class="cp-item" href="${safeUrl(ev.url)}" target="_blank" rel="${linkRel(ev.source)}">
           <span class="cp-cat">${esc(ev.category)}</span>
           <span class="cp-title">${esc(ev.title)}</span>
           <span class="cp-meta">${esc(ev.source||ev.author)} · ${esc(ev.date)}</span>
         </a>`).join('')
       : `<div class="cp-empty">Ainda não cobrimos esse país — volte em breve.</div>`;
     panel.classList.add('on');
+    // A11y: salva foco anterior, move pro panel pra navegação por teclado
+    _prevFocus = document.activeElement;
+    setTimeout(() => panel.focus?.(), 50);
   }
-  function closeCountryPanel() { panel.classList.remove('on'); }
+  function closeCountryPanel() {
+    panel.classList.remove('on');
+    // Restaura foco pro elemento anterior (botão/marker que abriu o panel)
+    if (_prevFocus && typeof _prevFocus.focus === 'function') {
+      _prevFocus.focus();
+      _prevFocus = null;
+    }
+  }
   if (panelClose) panelClose.addEventListener('click', closeCountryPanel);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCountryPanel(); });
   document.addEventListener('click', (e) => {
@@ -712,10 +744,12 @@ async function setupGlobe() {
     tip.style.left = ((cx / GLOBE_SIZE) * svgRect.width + (svgRect.left - rect.left)) + 'px';
     tip.style.top  = ((cy / GLOBE_SIZE) * svgRect.height + (svgRect.top - rect.top) - 10) + 'px';
     tip.classList.add('on');
+    tip.setAttribute('aria-hidden', 'false');
     hoverPauseUntil = performance.now() + 4000;
   }
   function hideTip() {
     tip.classList.remove('on');
+    tip.setAttribute('aria-hidden', 'true');
     hoverPauseUntil = performance.now() + 400;
   }
   // Safety: hide tooltip if user clicks elsewhere or scrolls away
@@ -832,332 +866,9 @@ async function setupGlobe() {
 /* ==========================================================
    GLOBE NEWS — geo dictionary + live fetch
 ========================================================== */
-const GEO_DICT = {
-  // Americas — países
-  'brazil': [-15.78, -47.93], 'brasil': [-15.78, -47.93], 'brasília': [-15.78, -47.93],
-  'são paulo': [-23.55, -46.63], 'rio de janeiro': [-22.91, -43.17], 'lula': [-15.78, -47.93],
-  'united states': [38.90, -77.03], 'trump': [38.90, -77.03], 'washington': [38.90, -77.03],
-  'wall street': [40.71, -74.01], 'new york': [40.71, -74.01], 'federal reserve': [38.90, -77.03],
-  'white house': [38.90, -77.03], 'pentagon': [38.90, -77.03], 'harris': [38.90, -77.03],
-  'american': [38.90, -77.03], 'u.s.': [38.90, -77.03], 'us economy': [38.90, -77.03],
-  'argentina': [-34.61, -58.37], 'buenos aires': [-34.61, -58.37], 'milei': [-34.61, -58.37],
-  'mexico': [19.43, -99.13], 'méxico': [19.43, -99.13], 'sheinbaum': [19.43, -99.13],
-  'canada': [45.42, -75.69], 'ottawa': [45.42, -75.69], 'carney': [45.42, -75.69], 'trudeau': [45.42, -75.69],
-  'colombia': [4.71, -74.07], 'bogotá': [4.71, -74.07],
-  'venezuela': [10.49, -66.88], 'caracas': [10.49, -66.88], 'maduro': [10.49, -66.88],
-  'chile': [-33.45, -70.67], 'santiago': [-33.45, -70.67],
-  'peru': [-12.04, -77.03], 'lima': [-12.04, -77.03],
-  'ecuador': [-0.23, -78.52], 'bolivia': [-16.50, -68.15], 'uruguay': [-33.00, -56.00],
-  'cuba': [23.13, -82.38], 'havana': [23.13, -82.38],
-  // Europe — países e líderes
-  'united kingdom': [51.51, -0.13], 'britain': [51.51, -0.13], 'london': [51.51, -0.13],
-  'uk ': [51.51, -0.13], 'starmer': [51.51, -0.13], 'downing street': [51.51, -0.13],
-  'bank of england': [51.51, -0.13], 'british': [51.51, -0.13],
-  'germany': [52.52, 13.40], 'berlin': [52.52, 13.40], 'scholz': [52.52, 13.40],
-  'merz': [52.52, 13.40], 'bundesbank': [52.52, 13.40], 'german': [52.52, 13.40],
-  'france': [48.85, 2.35], 'paris': [48.85, 2.35], 'macron': [48.85, 2.35], 'french': [48.85, 2.35],
-  'russia': [55.75, 37.62], 'moscow': [55.75, 37.62], 'putin': [55.75, 37.62], 'kremlin': [55.75, 37.62],
-  'ukraine': [50.45, 30.52], 'kyiv': [50.45, 30.52], 'zelensky': [50.45, 30.52],
-  'spain': [40.42, -3.70], 'madrid': [40.42, -3.70], 'sanchez': [40.42, -3.70],
-  'italy': [41.90, 12.49], 'rome': [41.90, 12.49], 'meloni': [41.90, 12.49], 'italian': [41.90, 12.49],
-  'netherlands': [52.37, 4.90], 'amsterdam': [52.37, 4.90],
-  'poland': [52.23, 21.01], 'warsaw': [52.23, 21.01],
-  'switzerland': [46.95, 7.44], 'zurich': [47.38, 8.54], 'davos': [46.80, 9.84],
-  'sweden': [59.33, 18.07], 'stockholm': [59.33, 18.07],
-  'norway': [59.91, 10.75], 'oslo': [59.91, 10.75],
-  'denmark': [55.68, 12.57], 'finland': [60.17, 24.94], 'austria': [48.21, 16.37],
-  'portugal': [38.72, -9.14], 'lisbon': [38.72, -9.14],
-  'greece': [37.98, 23.73], 'athens': [37.98, 23.73],
-  'turkey': [39.93, 32.86], 'erdogan': [39.93, 32.86], 'ankara': [39.93, 32.86],
-  'european union': [50.85, 4.35], 'brussels': [50.85, 4.35], 'ecb': [50.11, 8.68],
-  'nato': [50.85, 4.35], 'hungary': [47.50, 19.04], 'orbán': [47.50, 19.04],
-  'romania': [44.43, 26.10], 'czech': [50.08, 14.44], 'serbia': [44.80, 20.46],
-  // Middle East
-  'israel': [32.08, 34.78], 'tel aviv': [32.08, 34.78], 'netanyahu': [32.08, 34.78], 'israeli': [32.08, 34.78],
-  'iran': [35.69, 51.39], 'tehran': [35.69, 51.39], 'iranian': [35.69, 51.39],
-  'saudi arabia': [24.69, 46.72], 'riyadh': [24.69, 46.72], 'mbs': [24.69, 46.72],
-  'iraq': [33.34, 44.40], 'baghdad': [33.34, 44.40],
-  'syria': [33.51, 36.29], 'damascus': [33.51, 36.29],
-  'lebanon': [33.89, 35.50], 'beirut': [33.89, 35.50], 'hezbollah': [33.89, 35.50],
-  'yemen': [15.55, 44.21], 'houthi': [15.55, 44.21],
-  'gaza': [32.08, 34.78], 'west bank': [32.08, 34.78], 'hamas': [32.08, 34.78],
-  'uae': [24.45, 54.37], 'dubai': [25.20, 55.27], 'abu dhabi': [24.45, 54.37],
-  'qatar': [25.29, 51.53], 'doha': [25.29, 51.53],
-  'kuwait': [29.37, 47.98], 'jordan': [31.95, 35.93], 'amman': [31.95, 35.93],
-  'oman': [22.00, 57.50], 'bahrain': [24.69, 46.72],
-  // Asia — países, líderes e cidades
-  'china': [39.91, 116.39], 'beijing': [39.91, 116.39], 'xi jinping': [39.91, 116.39],
-  'shanghai': [31.23, 121.47], 'chinese': [39.91, 116.39],
-  'japan': [35.68, 139.69], 'tokyo': [35.68, 139.69], 'ishiba': [35.68, 139.69], 'japanese': [35.68, 139.69],
-  'india': [28.61, 77.21], 'new delhi': [28.61, 77.21], 'modi': [28.61, 77.21],
-  'mumbai': [19.08, 72.88], 'indian': [28.61, 77.21],
-  'south korea': [37.57, 126.98], 'seoul': [37.57, 126.98], 'korean': [37.57, 126.98],
-  'north korea': [39.02, 125.76], 'kim jong': [39.02, 125.76], 'pyongyang': [39.02, 125.76],
-  'taiwan': [25.04, 121.56], 'taipei': [25.04, 121.56],
-  'hong kong': [22.30, 114.17],
-  'singapore': [1.35, 103.82],
-  'indonesia': [-6.21, 106.85], 'jakarta': [-6.21, 106.85],
-  'pakistan': [33.72, 73.04], 'islamabad': [33.72, 73.04], 'karachi': [24.86, 67.01],
-  'afghanistan': [34.52, 69.18], 'kabul': [34.52, 69.18], 'taliban': [34.52, 69.18],
-  'bangladesh': [23.72, 90.41], 'sri lanka': [7.60, 80.70],
-  'vietnam': [21.03, 105.85], 'hanoi': [21.03, 105.85],
-  'thailand': [13.76, 100.50], 'bangkok': [13.76, 100.50],
-  'malaysia': [3.15, 101.69], 'kuala lumpur': [3.15, 101.69],
-  'philippines': [14.60, 120.98], 'manila': [14.60, 120.98],
-  'myanmar': [19.74, 96.08], 'cambodia': [11.57, 104.92],
-  'kazakhstan': [51.18, 71.45], 'uzbekistan': [41.30, 69.24],
-  // Africa
-  'south africa': [-25.75, 28.19], 'johannesburg': [-26.20, 28.04], 'pretoria': [-25.75, 28.19],
-  'nigeria': [9.07, 7.40], 'lagos': [6.46, 3.40], 'abuja': [9.07, 7.40],
-  'egypt': [30.06, 31.25], 'cairo': [30.06, 31.25], 'sisi': [30.06, 31.25],
-  'ethiopia': [9.03, 38.74], 'addis ababa': [9.03, 38.74],
-  'kenya': [-1.29, 36.82], 'nairobi': [-1.29, 36.82],
-  'morocco': [34.01, -6.85], 'rabat': [34.01, -6.85], 'casablanca': [33.59, -7.62],
-  'ghana': [5.55, -0.20], 'accra': [5.55, -0.20],
-  'sudan': [15.55, 32.53], 'khartoum': [15.55, 32.53],
-  'congo': [-4.32, 15.32], 'kinshasa': [-4.32, 15.32],
-  'tanzania': [-6.79, 39.21], 'uganda': [0.32, 32.58],
-  'angola': [-8.84, 13.23], 'mozambique': [-25.97, 32.57],
-  'somalia': [2.05, 45.34], 'mali': [12.65, -8.00], 'niger': [13.51, 2.12],
-  'libya': [26.34, 17.23], 'tripoli': [30.50, 14.50], 'tunisia': [36.82, 10.17],
-  'algeria': [36.74, 3.06], 'senegal': [14.71, -17.47],
-  // Oceania
-  'australia': [-35.28, 149.13], 'sydney': [-33.87, 151.21], 'canberra': [-35.28, 149.13],
-  'melbourne': [-37.81, 144.96], 'australian': [-35.28, 149.13],
-  'new zealand': [-41.29, 174.78], 'wellington': [-41.29, 174.78],
-  // Crypto / Macro — termos com âncora geográfica
-  'bitcoin': [40.71, -74.01], 'btc': [40.71, -74.01], 'satoshi': [40.71, -74.01],
-  'crypto': [40.71, -74.01], 'cryptocurrency': [40.71, -74.01],
-  'ethereum': [47.38, 8.54], 'eth': [47.38, 8.54], 'vitalik': [47.38, 8.54], 'buterin': [47.38, 8.54],
-  'solana': [37.77, -122.42], 'xrp': [37.77, -122.42], 'ripple': [37.77, -122.42],
-  'cardano': [47.38, 8.54], 'polkadot': [47.38, 8.54],
-  'chainlink': [37.77, -122.42], 'uniswap': [40.71, -74.01],
-  'aave': [51.51, -0.13], 'makerdao': [37.77, -122.42], 'compound': [37.77, -122.42],
-  'avalanche': [40.71, -74.01], 'avax': [40.71, -74.01],
-  'aptos': [37.77, -122.42], 'arbitrum': [40.71, -74.01], 'optimism': [37.77, -122.42],
-  'stablecoin': [42.36, -71.06], 'stablecoins': [42.36, -71.06],
-  'defi': [37.77, -122.42], 'nft': [40.71, -74.01], 'nfts': [40.71, -74.01],
-  'blockchain': [37.77, -122.42], 'web3': [37.77, -122.42],
-  'halving': [40.71, -74.01], 'hashrate': [38.90, -77.03], 'hash rate': [38.90, -77.03],
-  'miner': [38.90, -77.03], 'miners': [38.90, -77.03], 'mining': [38.90, -77.03],
-  'altcoin': [40.71, -74.01], 'altcoins': [40.71, -74.01],
-  'memecoin': [40.71, -74.01], 'meme coin': [40.71, -74.01],
-  'dogecoin': [40.71, -74.01], 'doge': [40.71, -74.01],
-  'shiba': [40.71, -74.01],
-  'bnb': [25.20, 55.27],
-  'staking': [40.71, -74.01], 'tvl': [40.71, -74.01],
-  'smart contract': [37.77, -122.42], 'smart contracts': [37.77, -122.42],
-  // Exchanges
-  'binance': [25.20, 55.27], 'changpeng zhao': [25.20, 55.27],
-  'coinbase': [37.77, -122.42], 'brian armstrong': [37.77, -122.42],
-  'kraken': [37.77, -122.42], 'winklevoss': [40.71, -74.01],
-  'bybit': [25.20, 55.27], 'okx': [25.04, 121.56], 'bitget': [1.35, 103.82], 'kucoin': [1.35, 103.82],
-  'bitfinex': [22.30, 114.17], 'deribit': [51.51, -0.13],
-  // Stablecoins
-  'tether': [22.30, 114.17], 'usdt': [22.30, 114.17],
-  'circle': [42.36, -71.06], 'usdc': [42.36, -71.06],
-  // Crypto-adjacent firms / vehicles
-  'microstrategy': [38.90, -77.03], 'saylor': [38.90, -77.03], 'michael saylor': [38.90, -77.03],
-  'grayscale': [40.71, -74.01], 'gbtc': [40.71, -74.01],
-  'blackrock': [40.71, -74.01], 'larry fink': [40.71, -74.01],
-  'fidelity': [42.36, -71.06], 'vaneck': [40.71, -74.01], 'ark invest': [40.71, -74.01],
-  'bitcoin etf': [40.71, -74.01], 'ethereum etf': [40.71, -74.01], 'spot etf': [40.71, -74.01],
-  'gensler': [38.90, -77.03], 'gary gensler': [38.90, -77.03], 'paul atkins': [38.90, -77.03],
-  'cftc': [38.90, -77.03], 'fdic': [38.90, -77.03],
-  'ftx': [40.71, -74.01], 'sbf': [40.71, -74.01], 'bankman-fried': [40.71, -74.01], 'bankman fried': [40.71, -74.01],
-  'luna': [37.57, 126.98], 'terra luna': [37.57, 126.98], 'do kwon': [37.57, 126.98],
-  'celsius': [40.71, -74.01], 'voyager': [40.71, -74.01],
-  '3ac': [1.35, 103.82], 'three arrows': [1.35, 103.82], 'mt gox': [35.68, 139.69], 'mt. gox': [35.68, 139.69],
-  'silvergate': [40.71, -74.01], 'signature bank': [40.71, -74.01], 'svb': [37.77, -122.42],
-  'polymarket': [40.71, -74.01], 'prediction market': [40.71, -74.01], 'prediction markets': [40.71, -74.01],
-  'kalshi': [40.71, -74.01],
+let GEO_DICT = {};
+let GEO_ENTRIES = []; // Populado em loadAll() após fetch
 
-  // Macro — Fed / bancos centrais / dados
-  'powell': [38.90, -77.03], 'jerome powell': [38.90, -77.03],
-  'yellen': [38.90, -77.03], 'janet yellen': [38.90, -77.03],
-  'bessent': [38.90, -77.03], 'scott bessent': [38.90, -77.03],
-  'fomc': [38.90, -77.03], 'jackson hole': [38.90, -77.03],
-  'rate cut': [38.90, -77.03], 'rate cuts': [38.90, -77.03],
-  'rate hike': [38.90, -77.03], 'rate hikes': [38.90, -77.03],
-  'interest rate': [38.90, -77.03], 'interest rates': [38.90, -77.03],
-  'basis point': [38.90, -77.03], 'basis points': [38.90, -77.03],
-  'inflation': [38.90, -77.03], 'disinflation': [38.90, -77.03], 'deflation': [38.90, -77.03], 'stagflation': [38.90, -77.03],
-  'cpi': [38.90, -77.03], 'core cpi': [38.90, -77.03],
-  'pce': [38.90, -77.03], 'core pce': [38.90, -77.03], 'ppi': [38.90, -77.03],
-  'unemployment': [38.90, -77.03], 'jobless': [38.90, -77.03], 'jobs report': [38.90, -77.03],
-  'nonfarm payrolls': [38.90, -77.03], 'payrolls': [38.90, -77.03], 'nfp': [38.90, -77.03],
-  'retail sales': [38.90, -77.03], 'consumer confidence': [38.90, -77.03],
-  'housing starts': [38.90, -77.03],
-  'pmi': [38.90, -77.03], 'ism': [38.90, -77.03], 'gdp': [38.90, -77.03],
-  'recession': [38.90, -77.03], 'soft landing': [38.90, -77.03], 'hard landing': [38.90, -77.03],
-  'treasury': [38.90, -77.03], 'treasuries': [38.90, -77.03],
-  'yield curve': [38.90, -77.03], '10-year': [38.90, -77.03], '10 year': [38.90, -77.03],
-  'bond yields': [38.90, -77.03], 'treasury yields': [38.90, -77.03],
-  'dollar index': [38.90, -77.03], 'dxy': [38.90, -77.03],
-  'quantitative easing': [38.90, -77.03], 'quantitative tightening': [38.90, -77.03],
-  'balance sheet': [38.90, -77.03], 'reverse repo': [38.90, -77.03],
-  'debt ceiling': [38.90, -77.03],
-  'monetary policy': [38.90, -77.03], 'hawkish': [38.90, -77.03], 'dovish': [38.90, -77.03],
-  'lagarde': [50.11, 8.68], 'christine lagarde': [50.11, 8.68],
-  'bank of england': [51.51, -0.13], 'andrew bailey': [51.51, -0.13],
-  'bank of japan': [35.68, 139.69], 'kazuo ueda': [35.68, 139.69], 'ueda': [35.68, 139.69],
-  'pboc': [39.91, 116.39], "people's bank of china": [39.91, 116.39],
-  'rbi': [28.61, 77.21], 'reserve bank of india': [28.61, 77.21],
-  'bis': [47.56, 7.59], 'bank for international settlements': [47.56, 7.59],
-
-  // Commodities
-  'oil price': [24.69, 46.72], 'crude oil': [24.69, 46.72], 'crude': [24.69, 46.72],
-  'wti': [29.76, -95.37], 'brent': [51.51, -0.13],
-  'gold price': [51.51, -0.13], 'gold': [51.51, -0.13], 'silver price': [51.51, -0.13],
-  'copper': [-33.45, -70.67], 'lithium': [-23.65, -68.13], 'uranium': [-23.65, -68.13],
-  'natural gas': [29.76, -95.37], 'lng': [29.76, -95.37],
-  'wheat': [51.18, 71.45], 'corn': [41.88, -93.09], 'soybean': [-23.55, -46.63], 'soybeans': [-23.55, -46.63],
-  'commodity': [40.71, -74.01], 'commodities': [40.71, -74.01],
-
-  // Mercados / índices
-  's&p 500': [40.71, -74.01], 's&p500': [40.71, -74.01], 'sp500': [40.71, -74.01], 'spx': [40.71, -74.01],
-  'nasdaq': [40.71, -74.01], 'dow jones': [40.71, -74.01],
-  'russell 2000': [40.71, -74.01], 'vix': [40.71, -74.01], 'nyse': [40.71, -74.01],
-  'ftse': [51.51, -0.13], 'ftse 100': [51.51, -0.13],
-  'dax': [52.52, 13.40], 'cac 40': [48.85, 2.35],
-  'nikkei': [35.68, 139.69], 'hang seng': [22.30, 114.17], 'kospi': [37.57, 126.98],
-  'shanghai composite': [31.23, 121.47],
-  'bovespa': [-23.55, -46.63], 'ibovespa': [-23.55, -46.63], 'b3': [-23.55, -46.63],
-  'merval': [-34.61, -58.37],
-  'msci': [40.71, -74.01], 'emerging markets': [40.71, -74.01],
-
-  // Tech / AI
-  'apple': [37.33, -122.03], 'tim cook': [37.33, -122.03], 'iphone': [37.33, -122.03],
-  'google': [37.42, -122.08], 'alphabet': [37.42, -122.08], 'sundar pichai': [37.42, -122.08],
-  'microsoft': [47.61, -122.33], 'satya nadella': [47.61, -122.33],
-  'amazon': [47.61, -122.33], 'andy jassy': [47.61, -122.33], 'aws': [47.61, -122.33],
-  'meta': [37.49, -122.14], 'zuckerberg': [37.49, -122.14], 'mark zuckerberg': [37.49, -122.14],
-  'facebook': [37.49, -122.14], 'instagram': [37.49, -122.14], 'whatsapp': [37.49, -122.14],
-  'nvidia': [37.42, -121.94], 'jensen huang': [37.42, -121.94],
-  'amd': [37.42, -121.94], 'intel': [37.42, -121.94], 'qualcomm': [32.72, -117.16],
-  'tesla': [30.22, -97.75], 'elon musk': [30.22, -97.75], 'musk': [30.22, -97.75],
-  'spacex': [30.22, -97.75], 'starlink': [30.22, -97.75], 'starship': [30.22, -97.75],
-  'openai': [37.77, -122.42], 'sam altman': [37.77, -122.42],
-  'chatgpt': [37.77, -122.42],
-  'anthropic': [37.77, -122.42], 'perplexity': [37.77, -122.42],
-  'mistral': [48.85, 2.35], 'deepseek': [22.54, 114.06],
-  'nasa': [38.90, -77.03], 'artemis': [38.90, -77.03],
-  'tsmc': [25.04, 121.56], 'taiwan semiconductor': [25.04, 121.56],
-  'samsung': [37.57, 126.98], 'sk hynix': [37.57, 126.98],
-  'sony': [35.68, 139.69], 'softbank': [35.68, 139.69], 'masayoshi son': [35.68, 139.69],
-  'alibaba': [30.27, 120.15], 'jack ma': [30.27, 120.15],
-  'tencent': [22.54, 114.06], 'byd': [22.54, 114.06],
-  'xiaomi': [39.91, 116.39], 'huawei': [22.54, 114.06],
-  'nio': [31.23, 121.47], 'xpeng': [22.54, 114.06],
-  'lufthansa': [50.11, 8.68],
-
-  // Wall Street / Bancos globais
-  'jp morgan': [40.71, -74.01], 'jpmorgan': [40.71, -74.01], 'jamie dimon': [40.71, -74.01],
-  'goldman sachs': [40.71, -74.01], 'goldman': [40.71, -74.01],
-  'morgan stanley': [40.71, -74.01],
-  'bank of america': [35.23, -80.84], 'wells fargo': [37.77, -122.42],
-  'citigroup': [40.71, -74.01], 'citibank': [40.71, -74.01],
-  'ubs': [47.38, 8.54], 'credit suisse': [47.38, 8.54],
-  'deutsche bank': [50.11, 8.68], 'barclays': [51.51, -0.13],
-  'hsbc': [51.51, -0.13], 'santander': [40.42, -3.70],
-  'bnp paribas': [48.85, 2.35], 'societe generale': [48.85, 2.35],
-  'nomura': [35.68, 139.69], 'icbc': [39.91, 116.39],
-
-  // EUA — estados/cidades/políticos expandidos
-  'biden': [38.90, -77.03], 'kamala': [38.90, -77.03], 'kamala harris': [38.90, -77.03],
-  'schumer': [38.90, -77.03], 'pelosi': [38.90, -77.03], 'nancy pelosi': [38.90, -77.03],
-  'mike johnson': [38.90, -77.03], 'mitch mcconnell': [38.90, -77.03],
-  'bernie sanders': [38.90, -77.03], 'elizabeth warren': [38.90, -77.03],
-  'vance': [38.90, -77.03], 'jd vance': [38.90, -77.03],
-  'desantis': [30.44, -84.28], 'ron desantis': [30.44, -84.28],
-  'newsom': [38.58, -121.49], 'gavin newsom': [38.58, -121.49],
-  'greg abbott': [30.27, -97.74],
-  'california': [34.05, -118.24], 'texas': [30.27, -97.74], 'florida': [27.99, -81.76],
-  'virginia': [37.54, -77.43], 'ohio': [39.96, -82.99], 'michigan': [42.33, -83.05],
-  'arizona': [33.45, -112.07], 'nevada': [36.17, -115.14], 'colorado': [39.74, -104.99],
-  'oregon': [45.52, -122.68], 'pennsylvania': [40.27, -76.88],
-  'san francisco': [37.77, -122.42], 'los angeles': [34.05, -118.24],
-  'miami': [25.79, -80.19], 'chicago': [41.88, -87.63], 'boston': [42.36, -71.06],
-  'houston': [29.76, -95.37], 'austin': [30.27, -97.74], 'seattle': [47.61, -122.33],
-  'dallas': [32.78, -96.80], 'atlanta': [33.75, -84.39], 'philadelphia': [39.95, -75.17],
-  'americans': [38.90, -77.03],
-
-  // Demonyms adicionais
-  'russian': [55.75, 37.62], 'russians': [55.75, 37.62],
-  'ukrainian': [50.45, 30.52], 'ukrainians': [50.45, 30.52],
-  'polish': [52.23, 21.01], 'poles': [52.23, 21.01],
-  'dutch': [52.37, 4.90],
-  'swedish': [59.33, 18.07], 'norwegian': [59.91, 10.75], 'danish': [55.68, 12.57],
-  'spanish': [40.42, -3.70], 'portuguese': [38.72, -9.14],
-  'belgian': [50.85, 4.35], 'swiss': [46.95, 7.44],
-  'saudi': [24.69, 46.72], 'egyptian': [30.06, 31.25], 'turkish': [39.93, 32.86],
-  'pakistani': [33.72, 73.04], 'afghan': [34.52, 69.18],
-  'vietnamese': [21.03, 105.85], 'thai': [13.76, 100.50], 'malaysian': [3.15, 101.69],
-  'filipino': [14.60, 120.98], 'indonesian': [-6.21, 106.85],
-  'mexican': [19.43, -99.13], 'brazilian': [-15.78, -47.93],
-  'argentine': [-34.61, -58.37], 'argentinian': [-34.61, -58.37],
-  'chilean': [-33.45, -70.67], 'colombian': [4.71, -74.07],
-  'venezuelan': [10.49, -66.88], 'cuban': [23.13, -82.38], 'cubans': [23.13, -82.38],
-  'peruvian': [-12.04, -77.03],
-  'canadian': [45.42, -75.69], 'canadians': [45.42, -75.69],
-  'nigerian': [9.07, 7.40], 'kenyan': [-1.29, 36.82], 'moroccan': [34.01, -6.85],
-  'ethiopian': [9.03, 38.74], 'sudanese': [15.55, 32.53],
-  'south african': [-25.75, 28.19],
-  'european': [50.85, 4.35], 'eurozone': [50.11, 8.68], 'euro area': [50.11, 8.68],
-
-  // Brasil / Argentina / Chile / México / Colômbia — expansão
-  'cfk': [-34.61, -58.37], 'cristina kirchner': [-34.61, -58.37], 'kirchner': [-34.61, -58.37],
-  'massa': [-34.61, -58.37], 'caputo': [-34.61, -58.37], 'luis caputo': [-34.61, -58.37],
-  'bullrich': [-34.61, -58.37], 'villarruel': [-34.61, -58.37], 'adorni': [-34.61, -58.37],
-  'haddad': [-15.78, -47.93], 'fernando haddad': [-15.78, -47.93],
-  'galipolo': [-15.78, -47.93], 'campos neto': [-15.78, -47.93],
-  'bolsonaro': [-15.78, -47.93], 'moraes': [-15.78, -47.93], 'alexandre de moraes': [-15.78, -47.93],
-  'petrobras': [-22.91, -43.17],
-  'itau': [-23.55, -46.63], 'itaú': [-23.55, -46.63], 'bradesco': [-23.55, -46.63], 'nubank': [-23.55, -46.63],
-  'copom': [-15.78, -47.93], 'selic': [-15.78, -47.93], 'stf': [-15.78, -47.93],
-  'pemex': [19.43, -99.13], 'amlo': [19.43, -99.13],
-  'boric': [-33.45, -70.67], 'codelco': [-33.45, -70.67],
-  'gustavo petro': [4.71, -74.07],
-
-  // Geopolítica — conflitos, organismos, tratados
-  'drone strike': [50.45, 30.52], 'drone strikes': [50.45, 30.52],
-  'missile strike': [31.77, 35.22], 'airstrike': [33.51, 36.29],
-  'ceasefire': [32.08, 34.78], 'cease fire': [32.08, 34.78],
-  'coup': [13.51, 2.12], 'junta': [13.51, 2.12],
-  'embargo': [38.90, -77.03], 'trade war': [38.90, -77.03], 'trade deal': [38.90, -77.03],
-  'tariffs': [38.90, -77.03], 'usmca': [19.43, -99.13], 'wto': [46.21, 6.14],
-  'summit': [50.85, 4.35], 'g7 summit': [51.51, -0.13], 'g20 summit': [-15.78, -47.93],
-  'united nations': [40.75, -73.98], 'security council': [40.75, -73.98],
-  'donbas': [49.84, 36.23], 'kharkiv': [49.99, 36.23], 'odesa': [46.48, 30.73], 'odessa': [46.48, 30.73],
-  'mariupol': [47.10, 37.55], 'crimea': [45.03, 34.10], 'odesa': [48.00, 31.00], 'odessa': [48.00, 31.00],
-  'belarus': [53.90, 27.57], 'lukashenko': [53.90, 27.57], 'minsk': [53.90, 27.57],
-  'sahel': [13.51, 2.12], 'tigray': [13.50, 38.45],
-  'hormuz': [27.20, 56.30], 'strait of hormuz': [27.20, 56.30],
-  'red sea': [15.55, 44.21], 'bab el mandeb': [15.55, 44.21], 'suez canal': [30.06, 31.25],
-  'south china sea': [22.54, 114.06], 'taiwan strait': [25.04, 121.56],
-  'korean peninsula': [37.57, 126.98], 'kashmir': [34.08, 74.80],
-  'nasrallah': [33.89, 35.50], 'sinwar': [32.08, 34.78], 'yahya sinwar': [32.08, 34.78],
-  'houthis': [15.55, 44.21],
-
-  // Termos legados (manter compatibilidade)
-  'imf': [38.90, -77.03], 'world bank': [38.90, -77.03], 'g7': [51.51, -0.13],
-  'g20': [-15.78, -47.93], 'brics': [-15.78, -47.93], 'opec': [24.69, 46.72],
-  'tariff': [38.90, -77.03], 'sanctions': [38.90, -77.03],
-
-  // Variações acentuadas / não-inglês (captura de títulos ES/PT)
-  'irán': [35.69, 51.39], 'ormuz': [27.20, 56.30],
-  'estados unidos': [38.90, -77.03], 'eua': [38.90, -77.03],
-  'méxico': [19.43, -99.13], 'teotihuacán': [19.69, -98.84],
-  'unión europea': [50.85, 4.35], 'união europeia': [50.85, 4.35], 'europea': [50.85, 4.35],
-  'reino unido': [51.51, -0.13], 'alemania': [52.52, 13.40], 'alemanha': [52.52, 13.40],
-  'españa': [40.42, -3.70], 'espanha': [40.42, -3.70],
-  'china': [39.91, 116.39],
-  'tajani': [41.90, 12.49], 'mandelson': [51.51, -0.13],
-  'nasrallah': [33.89, 35.50],
-};
-
-// Sort longest-first to avoid 'iran' matching inside 'ukraine'
-const GEO_ENTRIES = Object.entries(GEO_DICT).sort((a, b) => b[0].length - a[0].length);
 
 // ISO 3166-1 alpha-2 → [lat, lon]
 // Múltiplas cidades por país — pick aleatório para spread geográfico real
@@ -1691,6 +1402,15 @@ function setupGlobeFilters() {
     applyFilters();
   });
 
+  // Search box do modal de fontes — filtra rows por substring
+  document.getElementById('filter-source-search')?.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('#filter-source .gf-source-row').forEach(row => {
+      const txt = (row.textContent || '').toLowerCase();
+      row.classList.toggle('is-hidden', q.length > 0 && !txt.includes(q));
+    });
+  });
+
   document.getElementById('filter-source-none')?.addEventListener('click', () => {
     _getVisibleSources().forEach(s => _blockedSources.add(s));
     rebuildSourcePopup();
@@ -1767,6 +1487,11 @@ async function fetchGlobeNews() {
     }
   }
 
+  // Loading state — só mostra se request demorar >300ms (evita flash em fast networks)
+  const loadingEl = document.getElementById('globe-loading');
+  const loadingTimer = loadingEl ? setTimeout(() => loadingEl.classList.add('on'), 300) : null;
+  const stopLoading = () => { if (loadingTimer) clearTimeout(loadingTimer); loadingEl?.classList.remove('on'); };
+
   let fetched = false;
   try {
     const data = await fetch(WORKER_URL).then(r => r.json());
@@ -1774,7 +1499,10 @@ async function fetchGlobeNews() {
     if (rawArticles.length) {
       processArticles(rawArticles, 'worker');
       try {
-        localStorage.setItem(LS_KEY, JSON.stringify({ t: Date.now(), articles: rawArticles }));
+        // Cap em 200 artigos pra evitar quota overflow do localStorage
+        // (alguns browsers limitam 5MB total per origin).
+        const capped = rawArticles.slice(0, 200);
+        localStorage.setItem(LS_KEY, JSON.stringify({ t: Date.now(), articles: capped }));
       } catch {}
       fetched = true;
     }
@@ -1792,6 +1520,7 @@ async function fetchGlobeNews() {
     } catch (e) { console.warn('[globe] cache local indisponível', e); }
   }
 
+  stopLoading();
   if (results.length === 0) return; // keep static markers as fallback
 
   // Geo-tag por posição: d3.geoContains diz qual país contém as coords base
