@@ -2,5 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "wesearch-site",
   "compatibility_date": "2026-04-27",
-  "pages_build_output_dir": "."
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
 }
