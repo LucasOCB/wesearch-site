@@ -11,7 +11,8 @@
   { "id": "l0ck", "name": "L0ck", "initials": "L0", "linkUrl": "https://www.linkedin.com/in/lucasocbarros/", "photoUrl": "assets/analysts/l0ck.png", "bio": null },
   { "id": "lucca-benedetti", "name": "Lucca Benedetti", "initials": "LB", "linkUrl": "https://www.linkedin.com/in/lucca-benedetti/", "photoUrl": "assets/analysts/lucca-benedetti.png", "bio": null },
   { "id": "bernad-pedra", "name": "Bernad Pedra", "initials": "BP", "linkUrl": "https://x.com/pedraxbt", "linkLabel": "X", "photoUrl": "assets/analysts/bernad-pedra.png", "bio": null },
-  { "id": "yuri-gubert", "name": "Yuri Gubert", "initials": "YG", "linkUrl": "https://www.linkedin.com/in/yuri-gubert/", "photoUrl": null, "bio": null, "hidden": true },
+  { "id": "yuri-gubert", "name": "Yuri Gubert", "initials": "YG", "linkUrl": "https://www.linkedin.com/in/yuri-gubert/", "photoUrl": "assets/analysts/yuri-gubert.png", "bio": null },
   { "id": "carlos-cordeiro", "name": "Carlos Cordeiro", "initials": "CC", "linkUrl": "https://www.youtube.com/@opcoesdecripto", "linkLabel": "YouTube", "photoUrl": "assets/analysts/carlos-cordeiro.png", "bio": null },
-  { "id": "ney-neto", "name": "Ney Neto", "initials": "NN", "linkUrl": "https://www.linkedin.com/in/neyneto/", "photoUrl": null, "bio": null, "hidden": true }
+  { "id": "ney-neto", "name": "Ney Neto", "initials": "NN", "linkUrl": "https://www.linkedin.com/in/neyneto/", "photoUrl": "assets/analysts/ney-neto.png", "bio": null },
+  { "id": "arthur-victorio", "name": "Arthur Victorio", "initials": "AV", "linkUrl": "https://www.linkedin.com/in/arthur-victorio-03995bb6/", "photoUrl": "assets/analysts/arthur-victorio.png", "bio": null }
 ]
