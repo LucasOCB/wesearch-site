@@ -1,4 +1,6 @@
 [
-  { "id": "oxus-finance", "name": "Oxus Finance", "url": "https://www.linkedin.com/company/oxus-finance/" },
-  { "id": "evervalue", "name": "EverValue", "url": "https://www.linkedin.com/company/evervalue/" }
+  { "id": "oxus-finance", "name": "Oxus Finance", "url": "https://www.oxus.finance/" },
+  { "id": "evervalue", "name": "EverValue", "url": "https://evervaluecoin.com/pt/" },
+  { "id": "tangem", "name": "Tangem", "url": "https://tangem.com/pt/" },
+  { "id": "klever", "name": "Klever", "url": "https://klever.org/pt-br/" }
 ]
