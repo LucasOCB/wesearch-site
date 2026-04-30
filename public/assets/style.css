@@ -901,23 +901,33 @@ section.tight { padding: 0; }
 }
 .card .foot .arr { color: var(--orange); }
 
-/* ============ ANALYSTS ============ */
-.analysts {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: clamp(220px, 22vw, 280px);
-  gap: 1.25rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+/* ============ ANALYSTS (auto marquee, esquerda → direita) ============ */
+.analysts-marquee {
+  overflow: hidden;
   padding-bottom: 1.5rem;
   margin-right: calc(-1 * clamp(1.25rem, 4vw, 3.5rem));
-  padding-right: clamp(1.25rem, 4vw, 3.5rem);
+  margin-left:  calc(-1 * clamp(1.25rem, 4vw, 3.5rem));
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
 }
-.analysts::-webkit-scrollbar { display: none; }
+.analysts-marquee.is-dragging { cursor: grabbing; }
+.analysts-marquee.is-dragging .analyst { pointer-events: none; }
+.analysts-marquee, .analysts-track, .analysts-track .analyst,
+.analysts-track .analyst * { user-select: none; -webkit-user-drag: none; }
+.analysts-track img { -webkit-user-drag: none; }
+.analysts-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.analysts-track > .analyst {
+  flex: 0 0 clamp(220px, 22vw, 280px);
+  margin-right: 1.25rem;
+}
 
 .analyst {
-  scroll-snap-align: start;
   border: 1px solid var(--border);
   padding: 1.25rem;
   display: flex; flex-direction: column; gap: 1rem;

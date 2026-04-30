@@ -267,25 +267,24 @@ function renderArticles() {
 ========================================================== */
 function renderAnalysts() {
   const container = document.getElementById('carousel-analysts');
-  // Filtra membros marcados como hidden (ex: aguardando foto). Numeração
-  // do `i+1` segue a posição visível, não o índice no JSON.
   const visible = ANALISTAS.filter(an => !an.hidden);
-  container.innerHTML = visible.map((an, i) => {
+  const card = (an, i, clone) => {
     const hasLink = !!an.linkUrl;
     const tag = hasLink ? 'a' : 'div';
-    const attrs = hasLink
+    const linkAttrs = hasLink
       ? `href="${safeUrl(an.linkUrl)}" target="_blank" rel="noopener"`
       : 'aria-disabled="true"';
+    const cloneAttrs = clone ? 'aria-hidden="true" tabindex="-1"' : '';
     const photoSafe = safeLocalAsset(an.photoUrl);
     const portrait = photoSafe
-      ? `<img class="portrait" src="${photoSafe}" alt="${esc(an.name)}" loading="lazy" decoding="async">`
+      ? `<img class="portrait" src="${photoSafe}" alt="${clone ? '' : esc(an.name)}" loading="lazy" decoding="async">`
       : `<span class="initials">${esc(an.initials)}</span>`;
     const linkLabel = an.linkLabel || 'LinkedIn';
     const footer = hasLink
       ? `<span>${esc(linkLabel)}</span><span class="arr">↗</span>`
       : `<span>Em breve</span><span class="arr">—</span>`;
     return `
-    <${tag} class="analyst${hasLink ? '' : ' is-disabled'}" ${attrs}>
+    <${tag} class="analyst${hasLink ? '' : ' is-disabled'}" ${linkAttrs} ${cloneAttrs}>
       <div class="frame">
         <span class="tag">№ ${String(i+1).padStart(2,'0')}</span>
         <span class="ticks"></span>
@@ -298,9 +297,104 @@ function renderAnalysts() {
         ${footer}
       </div>
     </${tag}>`;
-  }).join('');
+  };
+  const originals = visible.map((an, i) => card(an, i, false)).join('');
+  const clones    = visible.map((an, i) => card(an, i, true)).join('');
+  container.innerHTML = originals + clones;
 
-  setupCarousel(container, document.getElementById('an-prev'), document.getElementById('an-next'), document.getElementById('an-bar'));
+  setupAnalystsMarquee(container);
+}
+
+function setupAnalystsMarquee(track) {
+  const marquee = track.parentElement;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PX_PER_SEC = reduced ? 0 : 54; // direita → esquerda
+  const DRAG_THRESHOLD = 5;
+
+  let trackX = 0;
+  let halfWidth = 0;
+  let isHoverPaused = false;
+  let isDragging = false;
+  let pointerDown = false;
+  let pointerId = null;
+  let dragStartX = 0;
+  let dragStartTrackX = 0;
+  let suppressClick = false;
+
+  const recalc = () => { halfWidth = track.scrollWidth / 2; };
+  // Recalcula quando imagens carregam (afetam scrollWidth)
+  recalc();
+  window.addEventListener('resize', recalc);
+  track.querySelectorAll('img.portrait').forEach(img => {
+    if (!img.complete) img.addEventListener('load', recalc, { once: true });
+  });
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    if (!isHoverPaused && !isDragging && halfWidth > 0) {
+      trackX -= PX_PER_SEC * dt;
+    }
+    if (halfWidth > 0) {
+      while (trackX <= -halfWidth) trackX += halfWidth;
+      while (trackX > 0)           trackX -= halfWidth;
+    }
+    track.style.transform = `translateX(${trackX}px)`;
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  marquee.addEventListener('mouseenter', () => { isHoverPaused = true; });
+  marquee.addEventListener('mouseleave', () => { isHoverPaused = false; });
+  marquee.addEventListener('focusin',    () => { isHoverPaused = true; });
+  marquee.addEventListener('focusout',   () => { isHoverPaused = false; });
+
+  // Bloqueia drag nativo de <a> e <img> que sequestraria o pointer
+  marquee.addEventListener('dragstart', (e) => e.preventDefault());
+
+  marquee.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointerDown = true;
+    pointerId = e.pointerId;
+    dragStartX = e.clientX;
+    dragStartTrackX = trackX;
+  });
+  marquee.addEventListener('pointermove', (e) => {
+    if (!pointerDown || e.pointerId !== pointerId) return;
+    const delta = e.clientX - dragStartX;
+    if (!isDragging && Math.abs(delta) > DRAG_THRESHOLD) {
+      isDragging = true;
+      try { marquee.setPointerCapture(pointerId); } catch {}
+      marquee.classList.add('is-dragging');
+    }
+    if (isDragging) {
+      e.preventDefault();
+      trackX = dragStartTrackX + delta;
+    }
+  });
+  function endDrag(e) {
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    pointerDown = false;
+    if (isDragging) {
+      isDragging = false;
+      suppressClick = true;
+      try { marquee.releasePointerCapture(pointerId); } catch {}
+      marquee.classList.remove('is-dragging');
+    }
+    pointerId = null;
+  }
+  marquee.addEventListener('pointerup', endDrag);
+  marquee.addEventListener('pointercancel', endDrag);
+
+  // Suprime clique acidental no link após drag horizontal
+  marquee.addEventListener('click', (e) => {
+    if (suppressClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      suppressClick = false;
+    }
+  }, true);
 }
 
 function setupCarousel(container, prev, next, bar) {
