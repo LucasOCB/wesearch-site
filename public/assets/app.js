@@ -12,7 +12,7 @@ const cfg = {
 // Magic numbers nomeados (setInterval/setTimeout/filtros de tempo).
 const CFG = {
   WORKER_URL: 'https://api.wesearchdao.xyz',
-  GLOBE_REFRESH_MS: 10 * 60 * 1000,      // 10min — alinhado com Cache-Control do Worker /globe
+  GLOBE_REFRESH_MS: 10 * 60 * 1000,      // 10min — refresh do globo
   TICKER_REFRESH_MS: 5 * 60 * 1000,      // 5min — alinhado com Cache-Control do /ticker
   DRAG_RESUME_MS: 250,                   // delay pra retomar auto-rotate após drag
   FILTER_24H_MS: 24 * 60 * 60 * 1000,
@@ -48,10 +48,8 @@ function safeUrl(u) {
   return u.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// Fontes com anti-bot agressivo que rejeitam tráfego de domínios desconhecidos
-// como referrer. Usar rel="noreferrer" faz browser não enviar Referer header,
-// fazendo a Bloomberg/etc tratar como visita direta. Adicionar fontes conforme
-// reportado por usuários.
+// Para algumas fontes, Referer cross-domain causa erro.
+// Esses links recebem rel="noreferrer".
 const NO_REFERRER_SOURCES = new Set([
   'Bloomberg',
 ]);
@@ -113,7 +111,7 @@ async function loadAll() {
   GEO_DICT = geo;
   GEO_ENTRIES = Object.entries(GEO_DICT).sort((a, b) => b[0].length - a[0].length);
 
-  // Stats inline na section "Últimas análises" — count real do Substack (cache 12h no Worker).
+  // Stats inline na section "Últimas análises".
   // Hardcode no HTML serve como fallback se o endpoint falhar.
   fetch(`${CFG.WORKER_URL}/post-count`)
     .then(r => r.json())
@@ -1655,10 +1653,6 @@ loadAll()
 
 /* ==========================================================
    MARKET TICKER
-   - Binance + Alternative.me fetched directly (CORS-open, keyless).
-   - Finnhub + Brapi require server-side proxy (/api/ticker) with
-     FINNHUB_KEY / BRAPI_KEY envs in production. Here we use
-     realistic seed values with gentle drift so the bar stays lively.
 ========================================================== */
 const TICKER_ORDER = [
   { label: "BTC",           key: "BTCUSDT",  src: "binance" },
@@ -1693,7 +1687,7 @@ const TICKER_ORDER = [
   { label: "FEAR & GREED",  key: "FNG",      src: "alternative" },
 ];
 
-// Seed fallback prices for Binance (used if fetch fails or pre-load)
+// Valores iniciais até a primeira atualização chegar.
 const BINANCE_SEED = {
   BTCUSDT: 64500, ETHUSDT: 3180, SOLUSDT: 172, BNBUSDT: 598, XRPUSDT: 0.52,
   ADAUSDT: 0.46, DOGEUSDT: 0.158, AVAXUSDT: 35.4, DOTUSDT: 7.12, LINKUSDT: 17.8,
@@ -1777,8 +1771,6 @@ function renderTickerRow(changedKeys = new Set()) {
 }
 
 // ---- Data fetchers ----
-// Bundle /ticker: 1 request substitui binance + fng + fx + 6 quotes. KV compartilhado entre visitantes.
-/* Seed pra Finnhub (sem API) e Brapi (fallback se upstream falhar). */
 function seedMocks() {
   for (const row of TICKER_ORDER) {
     if ((row.src === 'finnhub' || row.src === 'brapi') && row.seed && tickerState[row.key].value == null) {
@@ -1865,6 +1857,6 @@ async function refreshTicker() {
 
 // Init
 seedMocks();
-renderTickerRow();           // skeletons + mock seeds
+renderTickerRow();           // valores iniciais
 refreshTicker();             // live fetch
 setInterval(() => { if (!document.hidden) refreshTicker(); }, CFG.TICKER_REFRESH_MS);

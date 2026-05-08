@@ -462,6 +462,10 @@ section.block {
   border: 1px solid var(--border);
 }
 @media (max-width: 1100px) { .channels { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1100px) and (min-width: 601px) {
+  /* 7 channel cards em 2 cols deixam o último órfão; ocupa a linha cheia. */
+  .ch-card:last-child:nth-child(odd) { grid-column: 1 / -1; border-right: 0; }
+}
 @media (max-width: 600px)  { .channels { grid-template-columns: 1fr; } }
 .ch-card {
   padding: 1.5rem 1.4rem;
@@ -797,6 +801,12 @@ section.block {
 @media (max-width: 700px) {
   .kpi:nth-child(2n) { border-right: 0; }
   .kpi:nth-child(n+3) { border-top: 1px solid var(--border); }
+  /* Quando o último card fica órfão em layout 2-col (5 items),
+     ele ocupa a linha cheia pra fechar o contorno do bloco. */
+  .kpi:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    border-right: 0;
+  }
 }
 .kpi b {
   display: block;
