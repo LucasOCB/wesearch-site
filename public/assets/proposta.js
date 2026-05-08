@@ -172,15 +172,3 @@ document.querySelectorAll('.ch-card[data-photo]').forEach(card => {
   }
 })();
 
-// Highlight nav based on scroll
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.nav ul a');
-const onScroll = () => {
-  let current = '';
-  sections.forEach(s => {
-    const top = s.getBoundingClientRect().top;
-    if (top < 120) current = s.id;
-  });
-  // (deliberadamente leve: sem estilo ativo além do estático)
-};
-window.addEventListener('scroll', onScroll, { passive: true });
