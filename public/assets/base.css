@@ -1,0 +1,304 @@
+/* ============================================================
+   base.css — regras compartilhadas entre index e proposta
+   ============================================================ */
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface-2: #141414;
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
+  --fg: #f5f5f0;
+  --muted: #8a8580;
+  --muted-dim: #5c5853;
+  --orange: #FF5500;
+  --orange-dim: #cc4400;
+  --orange-deep: #B23C00;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Breakpoints — usar valores brutos nas @media (vars não funcionam lá).
+     Documentação:
+       480px  — empilhamento total, 1 coluna, tipografia mínima
+       760px  — 2 colunas onde cabiam 4; nav compactada
+       960px  — hero/globe passam a 1 coluna */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+body { line-height: 1.55; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+img { max-width: 100%; display: block; }
+
+::selection { background: var(--orange); color: var(--bg); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--orange-deep); }
+
+/* ============ LAYOUT ============ */
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mono.orange { color: var(--orange); }
+
+.serif { font-family: var(--serif); }
+
+/* ============ SKIP LINK (a11y) ============
+   Aparece apenas quando focado via teclado (Tab no início da página). */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  padding: 0.65rem 1rem;
+  background: var(--orange);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  z-index: 10000;
+  transition: top .2s var(--ease);
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--bg);
+  outline-offset: -4px;
+}
+
+/* ============ SCROLL PROGRESS ============ */
+/* Desktop: barra vertical na esquerda. Mobile: barra horizontal no topo
+   (evita conflito com swipe-to-go-back do iOS). */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100vh;
+  background: rgba(255, 85, 0, 0.07);
+  z-index: 200;
+  pointer-events: none;
+}
+.scroll-progress .fill {
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  transform-origin: top;
+  transform: scaleY(var(--progress, 0));
+  transition: transform 60ms linear;
+  box-shadow: 0 0 10px rgba(255, 85, 0, 0.45);
+}
+@media (max-width: 600px) {
+  .scroll-progress {
+    width: 100vw;
+    height: 2px;
+  }
+  .scroll-progress .fill {
+    transform-origin: left;
+    transform: scaleX(var(--progress, 0));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress .fill { transition: none; box-shadow: none; }
+}
+
+/* ============ NAV (header fixo) ============ */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.4rem clamp(1.25rem, 4vw, 3.5rem);
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav .brand {
+  display: inline-flex; align-items: center;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.02em;
+}
+.nav .brand .dot { color: var(--orange); }
+.nav .brand img { display: block; height: 1.6rem; width: auto; }
+.nav ul { list-style: none; display: flex; gap: 1.6rem; flex-wrap: wrap; justify-content: flex-end; }
+.nav ul a {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color .2s var(--ease);
+}
+.nav ul a:hover, .nav ul a.active { color: var(--orange); }
+
+/* ============ NAV MOBILE (hambúrguer) ============ */
+.nav-toggle {
+  display: none;
+  position: relative;
+  width: 36px; height: 36px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  z-index: 110;
+  padding: 0;
+}
+.nav-toggle span {
+  position: absolute;
+  left: 6px; right: 6px;
+  height: 2px;
+  background: var(--orange);
+  transform-origin: center;
+  transition: transform .3s var(--ease), opacity .2s var(--ease), top .3s var(--ease);
+}
+.nav-toggle span:nth-child(1) { top: 11px; }
+.nav-toggle span:nth-child(2) { top: 17px; }
+.nav-toggle span:nth-child(3) { top: 23px; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) {
+  top: 17px; transform: rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) {
+  top: 17px; transform: rotate(-45deg);
+}
+
+.nav-backdrop { display: none; }
+
+@media (max-width: 760px) {
+  .nav { padding: 1rem clamp(1rem, 4vw, 2rem); }
+  .nav-toggle { display: block; }
+
+  /* Backdrop fora do nav (sibling) — escapa do stacking context da nav e
+     consegue cobrir/borrar a tela toda, não só a faixa do header. */
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s var(--ease);
+    z-index: 90;
+  }
+  body.nav-open .nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Drawer entra pela direita, ocupa ~50% (mín 240px). Conteúdo alinhado à direita,
+     puxado pro topo (não centralizado verticalmente). */
+  .nav ul {
+    position: fixed;
+    top: 0; right: 0;
+    width: clamp(240px, 50%, 360px);
+    height: 100vh;
+    background: rgba(10, 10, 10, 0.97);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid var(--border-strong);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 1.4rem;
+    padding: 6rem 1.8rem 3rem;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .35s var(--ease), opacity .25s var(--ease);
+    z-index: 95;
+  }
+  .nav.is-open ul {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .nav ul li,
+  .nav ul li:not(:last-child) { display: block; text-align: right; }
+  .nav ul a {
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    padding: 0.5rem 0;
+    color: var(--fg);
+    text-align: right;
+  }
+}
+
+/* ============ FOOTER ============ */
+footer.foot {
+  border-top: 1px solid var(--border);
+  padding: clamp(2rem, 4vw, 3rem) 0 clamp(1.5rem, 3vw, 2.25rem);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 3rem;
+}
+@media (max-width: 760px) {
+  footer.foot {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 2.5rem;
+  }
+  footer.foot > :first-child { grid-column: 1 / -1; }
+}
+footer .brand-big {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 2rem;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.8rem;
+}
+footer .brand-big .dot { color: var(--orange); }
+footer .brand-big img { display: block; height: 2.4rem; width: auto; }
+footer .tagline {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 38ch;
+  margin-bottom: 2rem;
+}
+footer .col h4 {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+footer .col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+footer .col ul a {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg);
+  transition: color .2s var(--ease);
+}
+footer .col ul a:hover { color: var(--orange); }
+footer .col ul a .arr { color: var(--orange); margin-left: 0.3rem; }

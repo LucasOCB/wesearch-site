@@ -3,31 +3,60 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>WeSearch — Research Cripto</title>
+<title>WeSearch · Research Cripto</title>
 <meta name="description" content="A Nova Era do Research Cripto. Inteligência coletiva em Macroeconomia, On-Chain, Geopolítica e Insights de Mercado." />
+<link rel="canonical" href="https://wesearchdao.xyz/" />
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="WeSearch · Research Cripto" />
+<meta property="og:description" content="A Nova Era do Research Cripto. Inteligência coletiva em Macroeconomia, On-Chain, Geopolítica e Insights de Mercado." />
+<meta property="og:url" content="https://wesearchdao.xyz/" />
+<meta property="og:image" content="https://wesearchdao.xyz/assets/wesearch-logo.webp" />
+<meta property="og:image:width" content="1000" />
+<meta property="og:image:height" content="1000" />
+<meta property="og:locale" content="pt_BR" />
+<meta property="og:site_name" content="WeSearch" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="WeSearch · Research Cripto" />
+<meta name="twitter:description" content="A Nova Era do Research Cripto. Inteligência coletiva em Macroeconomia, On-Chain, Geopolítica e Insights de Mercado." />
+<meta name="twitter:image" content="https://wesearchdao.xyz/assets/wesearch-logo.webp" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.wesearchdao.xyz https://cloudflareinsights.com; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests;" />
+<link rel="stylesheet" href="assets/base.css" />
 <link rel="stylesheet" href="assets/style.css" />
 <script src="assets/vendor/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" defer></script>
 <script src="assets/vendor/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" defer></script>
 <script src="assets/app.js" defer></script>
+<script src="assets/scroll-progress.js" defer></script>
+<script src="assets/nav-mobile.js" defer></script>
 </head>
 <body>
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+<div class="scroll-progress" aria-hidden="true"><div class="fill"></div></div>
 
 <!-- ============ STICKY NAV ============ -->
 <nav class="nav" id="nav" aria-label="Principal">
-  <a href="#top" class="brand">WeSearch<span class="dot">.</span></a>
-  <ul>
+  <a href="#top" class="brand"><img src="assets/wesearch-wordmark.webp" alt="WeSearch" width="1382" height="192" /></a>
+  <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-menu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul id="nav-menu">
     <li><a href="#globo">Globo</a></li>
     <li><a href="#artigos">Artigos</a></li>
     <li><a href="#time">Time</a></li>
-    <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Newsletter ↗</a></li>
+    <li><a href="proposta.html">Proposta</a></li>
+    <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener noreferrer">Newsletter ↗</a></li>
   </ul>
 </nav>
+<div class="nav-backdrop" aria-hidden="true"></div>
 
+<main id="main">
 <div class="page" id="top">
 
   <!-- ============ HERO ============ -->
@@ -42,20 +71,20 @@
         <span class="diamond"></span>
         <span class="txt">Research Collective</span>
       </div>
-      <h1 class="hero-title">WeSearch<span class="dot">.</span></h1>
+      <h1 class="hero-title hero-title-logo"><img src="assets/wesearch-wordmark.webp" alt="WeSearch" width="1382" height="192" /></h1>
       <p class="hero-sub">
         A Nova Era do Research Cripto. Inteligência coletiva em <em>Macroeconomia</em>, <em>On-Chain</em>, <em>Geopolítica</em> e <em>Insights de Mercado</em>.
       </p>
       <div class="hero-actions">
         <a href="#artigos" class="ghost-link">Últimas análises <span class="arr">↓</span></a>
-        <a href="https://wesearch.substack.com" target="_blank" rel="noopener" class="ghost-link">Assinar newsletter <span class="arr">↗</span></a>
+        <a href="https://wesearch.substack.com" target="_blank" rel="noopener noreferrer" class="ghost-link">Assinar newsletter <span class="arr">↗</span></a>
       </div>
     </div>
 
     <div class="hero-right" aria-hidden="true">
       <div class="hero-mark">
         <!-- Decorative rings removed per request -->
-        <img src="assets/wesearch-logo.png?v=2" alt="WeSearch" class="hero-mark-img" />
+        <img src="assets/wesearch-logo.webp?v=2" alt="WeSearch" class="hero-mark-img" />
         <svg class="hero-mark-streams" viewBox="0 0 320 320" aria-hidden="true" preserveAspectRatio="none">
           <defs>
             <path id="stream-a" d="M -20 40   C 60 110,  180 90,  340 200" />
@@ -205,7 +234,7 @@
         </div>
       </div>
       <div class="right right--stack">
-        <a href="https://wesearch.substack.com" target="_blank" rel="noopener" class="ghost-link">Ver todas <span class="arr">↗</span></a>
+        <a href="https://wesearch.substack.com" target="_blank" rel="noopener noreferrer" class="ghost-link">Ver todas <span class="arr">↗</span></a>
         <div class="carousel-ctl">
           <button id="art-prev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 6l-6 6 6 6"/></svg></button>
           <button id="art-next" aria-label="Próximo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -234,6 +263,29 @@
     </div>
   </section>
 
+  <!-- ============ SPONSORSHIP CTA ============ -->
+  <section id="patrocinio" class="sponsor-cta">
+    <a href="proposta.html" class="sponsor-card" aria-label="Ver proposta comercial WeSearch">
+      <div class="sponsor-grid" aria-hidden="true"></div>
+      <div class="sponsor-inner">
+        <div class="sponsor-left">
+          <span class="mono orange label">◆ Para patrocinadores</span>
+          <h2 class="heading sponsor-h">Compre <em>autoridade</em> em cripto, não apenas espaço em live<span class="dot">.</span></h2>
+          <p class="sponsor-p">
+            Uma rede recorrente de lives, creators e editorial. <b>+161K visualizações documentadas</b> em 14 meses, 11 canais ativos e 3 níveis comerciais, de awareness a parceria estratégica.
+          </p>
+          <span class="sponsor-cta-link">Ver proposta comercial <span class="arr">→</span></span>
+        </div>
+        <div class="sponsor-right">
+          <div class="sp-stat"><b>+200K</b><span>Contatos</span></div>
+          <div class="sp-stat"><b>7</b><span>Canais</span></div>
+          <div class="sp-stat"><b>4/mês</b><span>Lives</span></div>
+          <div class="sp-stat alt"><b>US$ 750</b><span>Tier recomendado</span></div>
+        </div>
+      </div>
+    </a>
+  </section>
+
   <!-- ============ PARTNERS ============ -->
   <section id="parceiros">
     <div class="section-head">
@@ -252,8 +304,8 @@
   <!-- ============ FOOTER ============ -->
   <footer class="foot">
     <div>
-      <div class="brand-big">WeSearch<span class="dot">.</span></div>
-      <p class="tagline">WeSearch, We Decode — A Nova Era do Research Cripto.</p>
+      <div class="brand-big"><img src="assets/wesearch-wordmark.webp" alt="WeSearch" width="1382" height="192" loading="lazy" decoding="async" /></div>
+      <p class="tagline">WeSearch, We Decode. A Nova Era do Research Cripto.</p>
           </div>
     <div class="col">
       <h4>Navegação</h4>
@@ -262,16 +314,18 @@
         <li><a href="#artigos">Artigos</a></li>
         <li><a href="#time">Time</a></li>
         <li><a href="#parceiros">Parceiros</a></li>
-        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Newsletter <span class="arr">↗</span></a></li>
+        <li><a href="proposta.html">Proposta</a></li>
+        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener noreferrer">Newsletter <span class="arr">↗</span></a></li>
       </ul>
     </div>
     <div class="col">
       <h4>Canais</h4>
       <ul>
-        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener">Substack <span class="arr">↗</span></a></li>
-        <li><a href="https://www.youtube.com/@wesearchdao" target="_blank" rel="noopener">YouTube <span class="arr">↗</span></a></li>
-        <li><a href="https://www.instagram.com/wesearchdao/" target="_blank" rel="noopener">Instagram <span class="arr">↗</span></a></li>
-        <li><a href="https://www.linkedin.com/company/wesearchdao" target="_blank" rel="noopener">LinkedIn <span class="arr">↗</span></a></li>
+        <li><a href="https://wesearch.substack.com" target="_blank" rel="noopener noreferrer">Substack <span class="arr">↗</span></a></li>
+        <li><a href="https://www.youtube.com/@wesearchdao" target="_blank" rel="noopener noreferrer">YouTube <span class="arr">↗</span></a></li>
+        <li><a href="https://www.instagram.com/wesearchdao/" target="_blank" rel="noopener noreferrer">Instagram <span class="arr">↗</span></a></li>
+        <li><a href="https://www.linkedin.com/company/wesearchdao" target="_blank" rel="noopener noreferrer">LinkedIn <span class="arr">↗</span></a></li>
+        <li><a href="https://open.spotify.com/show/033dd0Yej9mWtJtwwZ5CkX" target="_blank" rel="noopener noreferrer">Spotify <span class="arr">↗</span></a></li>
       </ul>
     </div>
   </footer>
@@ -282,6 +336,8 @@
   </div>
 
 </div>
+
+</main>
 
 <!-- Tweaks panel removed: globe now rotates gently on its own -->
 
